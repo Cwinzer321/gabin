@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Order dengan Map</title>
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCK2oL-05MNnFgCW-N-qbpApPgcXmQjMMQ&libraries=places"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 70%;
+            margin-bottom: 20px;
+        }
+
+        .info {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #25D366;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #20b855;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div class="info">
+        <h3>Informasi Pengiriman</h3>
+        <p><strong>Alamat Anda:</strong> <span id="alamat">-</span></p>
+        <p><strong>Jarak:</strong> <span id="jarak">-</span></p>
+        <p><strong>Ongkir:</strong> <span id="ongkir">-</span></p>
+        <a id="linkWA" href="#" target="_blank" style="display: none;">
+            <button>Kirim ke WhatsApp</button>
+        </a>
+    </div>
+
+    <script>
+        const RESTAURANT_COORDINATES = { lat: -6.251627, lng: 107.246045 }; // Lokasi restoran
+        let map, marker, geocoder, distanceService;
+
+        function initMap() {
+            geocoder = new google.maps.Geocoder();
+            distanceService = new google.maps.DistanceMatrixService();
+
+            // Inisialisasi peta
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: RESTAURANT_COORDINATES,
+                zoom: 15,
+            });
+
+            // Marker untuk restoran
+            new google.maps.Marker({
+                position: RESTAURANT_COORDINATES,
+                map,
+                label: "R",
+                title: "Lokasi Restoran",
+            });
+
+            // Marker pelanggan
+            marker = new google.maps.Marker({
+                position: RESTAURANT_COORDINATES,
+                map,
+                draggable: true,
+                title: "Geser ke lokasi Anda",
+            });
+
+            // Event listener untuk marker
+            marker.addListener("dragend", () => {
+                const position = marker.getPosition();
+                updateLocation(position);
+            });
+        }
+
+        function updateLocation(position) {
+            geocoder.geocode({ location: position }, (results, status) => {
+                if (status === "OK" && results[0]) {
+                    const alamat = results[0].formatted_address;
+                    document.getElementById("alamat").innerText = alamat;
+
+                    // Hitung jarak
+                    distanceService.getDistanceMatrix(
+                        {
+                            origins: [RESTAURANT_COORDINATES],
+                            destinations: [position],
+                            travelMode: "DRIVING",
+                        },
+                        (response, status) => {
+                            if (status === "OK") {
+                                const distanceText = response.rows[0].elements[0].distance.text;
+                                const distanceValue = response.rows[0].elements[0].distance.value / 1000; // Meter ke KM
+                                let ongkir = 0;
+
+                                // Perhitungan ongkir
+                                if (distanceValue <= 5) {
+                                    ongkir = 5000;
+                                } else if (distanceValue <= 10) {
+                                    ongkir = 5000 + (distanceValue - 5) * 2000;
+                                } else {
+                                    ongkir = 5000 + (5 * 2000) + (distanceValue - 10) * 1500;
+                                }
+
+                                document.getElementById("jarak").innerText = distanceText;
+                                document.getElementById("ongkir").innerText = `Rp${ongkir.toLocaleString("id-ID")}`;
+
+                                // Buat link WhatsApp
+                                const linkWA = `https://wa.me/6285157204233?text=Halo%20saya%20mau%20pesan%20delivery.%20Berikut%20data%20saya:%0A%0ALokasi:%20${encodeURIComponent(
+                                    alamat
+                                )}%0AJarak:%20${distanceText}%0AOngkir:%20Rp${ongkir.toLocaleString("id-ID")}`;
+                                document.getElementById("linkWA").style.display = "block";
+                                document.getElementById("linkWA").href = linkWA;
+                            }
+                        }
+                    );
+                } else {
+                    alert("Gagal mendapatkan alamat. Coba geser marker ke lokasi lain.");
+                }
+            });
+        }
+
+        window.initMap = initMap;
+    </script>
+</body>
+
+</html>
