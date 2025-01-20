@@ -52,7 +52,7 @@
                         <button id="whatsappButton" class="btn btn-success whatsapp-btn">Kirim ke WhatsApp</button>
 
                         <div class="mt-3">
-                            <button class="btn btn-info w-100" onclick="openGoogleMaps()">Buka Google Maps untuk Salin Koordinat</button>
+                            <button class="btn btn-primary w-100" onclick="openGoogleMaps()">Buka Google Maps untuk Salin Koordinat</button>
                         </div>
                     </div>
                 </div>
@@ -98,7 +98,7 @@
             document.getElementById("ongkir").innerText = `Rp${ongkir.toLocaleString("id-ID")}`;
 
             const restoranWA = "6285157204233"; // Nomor WhatsApp Restoran
-            const pesanWA = `Halo, saya ingin memesan makanan dengan rincian berikut:%0A%0A- Lokasi Pelanggan: Lat: ${customerLatLng.lat}, Lng: ${customerLatLng.lng}%0A- Jarak: ${distance.toFixed(2)} km%0A- Ongkir: Rp${ongkir.toLocaleString("id-ID")}%0A%0AMohon konfirmasi pesanan saya. Terima kasih.`;
+            const pesanWA = `Halo, saya ingin memesan makanan ini Lokasi Saya: Lat: ${customerLatLng.lat}, Lng: ${customerLatLng.lng}- Jarak: ${distance.toFixed(2)} km- Ongkir: Rp${ongkir.toLocaleString("id-ID")} Mohon konfirmasi pesanan saya. Terima kasih.`;
             const linkWA = `https://wa.me/${restoranWA}?text=${encodeURIComponent(pesanWA)}`;
 
             const whatsappButton = document.getElementById("whatsappButton");
