@@ -4,181 +4,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delivery Order dengan Map</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCK2oL-05MNnFgCW-N-qbpApPgcXmQjMMQ&libraries=places"></script>
+    <title>Delivery Order dengan Peta</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
         #map {
             width: 100%;
-            height: 60vh;
+            height: 400px;
         }
 
-        .info {
+        .whatsapp-btn {
+            display: none;
             width: 100%;
-            max-width: 400px;
-            background: white;
-            padding: 15px;
-            margin: 10px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            text-align: center;
         }
 
-        button {
+        .input-box {
             width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            border: none;
-            border-radius: 5px;
-            background-color: #25D366;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
         }
 
-        button:hover {
-            background-color: #20b855;
-        }
-
-        /* Responsif untuk layar kecil */
-        @media (max-width: 768px) {
-            #map {
-                height: 50vh;
-            }
-
-            .info {
-                padding: 10px;
-                font-size: 14px;
-            }
-
-            button {
-                font-size: 14px;
-                padding: 8px;
-            }
-        }
-
-        /* Responsif untuk layar yang sangat kecil */
-        @media (max-width: 480px) {
-            #map {
-                height: 40vh;
-            }
-
-            .info {
-                font-size: 12px;
-            }
-
-            button {
-                font-size: 12px;
-                padding: 6px;
-            }
+        .container {
+            margin-top: 20px;
         }
     </style>
 </head>
 
 <body>
-    <div id="map"></div>
-    <div class="info">
-        <h3>Informasi Pengiriman</h3>
-        <p><strong>Alamat Anda:</strong> <span id="alamat">-</span></p>
-        <p><strong>Jarak:</strong> <span id="jarak">-</span></p>
-        <p><strong>Ongkir:</strong> <span id="ongkir">-</span></p>
-        <a id="linkWA" href="#" target="_blank" style="display: none;">
-            <button>Kirim ke WhatsApp</button>
-        </a>
+
+    <div class="container">
+        <h1 class="text-center mb-4">Order Delivery dengan Peta</h1>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div id="map"></div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Masukkan Koordinat Kamu</h5>
+                        <input type="text" class="form-control mb-3 input-box" id="customer_coordinates" placeholder="Contoh: -6.251627, 107.246045" />
+                        <button class="btn btn-primary w-100" onclick="setCustomerLocation()">Set Lokasi Pelanggan</button>
+
+                        <div class="mt-3">
+                            <p><strong>Jarak:</strong> <span id="jarak">-</span> km</p>
+                            <p><strong>Ongkir:</strong> <span id="ongkir">-</span></p>
+                        </div>
+
+                        <button id="whatsappButton" class="btn btn-success whatsapp-btn">Kirim ke WhatsApp</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const RESTAURANT_COORDINATES = { lat: -6.251627, lng: 107.246045 }; // Lokasi restoran
-        let map, marker, geocoder, distanceService;
+        let map, restoMarker, customerMarker, routeLine;
+        let restoLatLng = {
+            lat: -6.251627,
+            lng: 107.246045
+        }; // Lokasi Restoran (Fixed)
+        let customerLatLng;
 
+        // Fungsi untuk menghitung ongkir
+        function calculateOngkir(distance) {
+            const farePerKm = 500; // Ongkir per km (Rp 500)
+            const totalFare = Math.ceil(distance) * farePerKm; // Menghitung ongkir dibulatkan ke atas
+            return totalFare;
+        }
+
+        // Inisialisasi Peta
         function initMap() {
-            geocoder = new google.maps.Geocoder();
-            distanceService = new google.maps.DistanceMatrixService();
+            map = L.map('map').setView([0, 0], 2); // Set view ke seluruh dunia terlebih dahulu
 
-            // Inisialisasi peta
-            map = new google.maps.Map(document.getElementById("map"), {
-                center: RESTAURANT_COORDINATES,
-                zoom: 15,
-            });
+            // Menambahkan tile OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
 
-            // Marker untuk restoran
-            new google.maps.Marker({
-                position: RESTAURANT_COORDINATES,
-                map,
-                label: "R",
-                title: "Lokasi Restoran",
-            });
+            // Tambahkan marker untuk restoran
+            restoMarker = L.marker(restoLatLng).addTo(map).bindPopup("Restoran");
 
-            // Marker pelanggan
-            marker = new google.maps.Marker({
-                position: RESTAURANT_COORDINATES,
-                map,
-                draggable: true,
-                title: "Geser ke lokasi Anda",
-            });
-
-            // Event listener untuk marker
-            marker.addListener("dragend", () => {
-                const position = marker.getPosition();
-                updateLocation(position);
+            // Menambahkan event listener untuk klik peta
+            map.on('click', function(e) {
+                const latLng = e.latlng;
+                setCustomerLocationFromMap(latLng);
             });
         }
 
-        function updateLocation(position) {
-            geocoder.geocode({ location: position }, (results, status) => {
-                if (status === "OK" && results[0]) {
-                    const alamat = results[0].formatted_address;
-                    document.getElementById("alamat").innerText = alamat;
+        // Fungsi untuk update jarak dan ongkir
+        function updateInfo() {
+            const distance = calculateDistance(restoLatLng.lat, restoLatLng.lng, customerLatLng.lat, customerLatLng.lng);
+            document.getElementById("jarak").innerText = distance.toFixed(2);
 
-                    // Hitung jarak
-                    distanceService.getDistanceMatrix(
-                        {
-                            origins: [RESTAURANT_COORDINATES],
-                            destinations: [position],
-                            travelMode: "DRIVING",
-                        },
-                        (response, status) => {
-                            if (status === "OK") {
-                                const distanceText = response.rows[0].elements[0].distance.text;
-                                const distanceValue = response.rows[0].elements[0].distance.value / 1000; // Meter ke KM
-                                let ongkir = 0;
+            // Hitung ongkir
+            const ongkir = calculateOngkir(distance);
+            document.getElementById("ongkir").innerText = `Rp${ongkir.toLocaleString("id-ID")}`;
 
-                                // Perhitungan ongkir
-                                if (distanceValue <= 5) {
-                                    ongkir = 5000;
-                                } else if (distanceValue <= 10) {
-                                    ongkir = 5000 + (distanceValue - 5) * 2000;
-                                } else {
-                                    ongkir = 5000 + (5 * 2000) + (distanceValue - 10) * 1500;
-                                }
+            // Menampilkan tombol WhatsApp
+            const linkWA = `https://wa.me/6285157204233?text=Halo%20saya%20mau%20pesan%20delivery.%20Berikut%20data%20saya:%0A%0ALokasi:%20${encodeURIComponent(
+                `Lat: ${customerLatLng.lat}, Lng: ${customerLatLng.lng}`
+            )}%0AJarak:%20${distance.toFixed(2)}%20km%0AOngkir:%20Rp${ongkir.toLocaleString("id-ID")}`;
+            const whatsappButton = document.getElementById("whatsappButton");
+            whatsappButton.style.display = "block";
+            whatsappButton.onclick = function() {
+                window.open(linkWA, "_blank");
+            };
+        }
 
-                                document.getElementById("jarak").innerText = distanceText;
-                                document.getElementById("ongkir").innerText = `Rp${ongkir.toLocaleString("id-ID")}`;
+        // Fungsi untuk menghitung jarak menggunakan rumus Haversine
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radius Bumi dalam kilometer
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // Jarak dalam kilometer
+        }
 
-                                // Buat link WhatsApp
-                                const linkWA = `https://wa.me/6285157204233?text=Halo%20saya%20mau%20pesan%20delivery.%20Berikut%20data%20saya:%0A%0ALokasi:%20${encodeURIComponent(
-                                    alamat
-                                )}%0AJarak:%20${distanceText}%0AOngkir:%20Rp${ongkir.toLocaleString("id-ID")}`;
-                                document.getElementById("linkWA").style.display = "block";
-                                document.getElementById("linkWA").href = linkWA;
-                            }
-                        }
-                    );
+        // Fungsi untuk konversi derajat ke radian
+        function toRad(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        // Fungsi untuk set lokasi pelanggan melalui input
+        function setCustomerLocation() {
+            const coordinates = document.getElementById("customer_coordinates").value.trim();
+            const coords = coordinates.split(',');
+
+            if (coords.length === 2) {
+                const lat = parseFloat(coords[0].trim());
+                const lng = parseFloat(coords[1].trim());
+
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    customerLatLng = {
+                        lat: lat,
+                        lng: lng
+                    };
+
+                    // Pindahkan marker pelanggan
+                    if (customerMarker) {
+                        customerMarker.setLatLng(customerLatLng);
+                    } else {
+                        customerMarker = L.marker(customerLatLng).addTo(map).bindPopup("Pelanggan");
+                    }
+
+                    // Perbesar peta ke lokasi pelanggan
+                    map.setView(customerLatLng, 15); // Perbesar ke zoom level 15
+
+                    // Update info jarak dan ongkir
+                    updateInfo();
+
+                    // Gambar rute antara restoran dan pelanggan
+                    getRoute(restoLatLng, customerLatLng);
                 } else {
-                    alert("Gagal mendapatkan alamat. Coba geser marker ke lokasi lain.");
+                    alert("Masukkan koordinat yang valid.");
                 }
-            });
+            } else {
+                alert("Format koordinat tidak valid. Gunakan format: Latitude, Longitude");
+            }
         }
 
-        window.initMap = initMap;
+        // Fungsi untuk set lokasi pelanggan melalui klik pada peta
+        function setCustomerLocationFromMap(latLng) {
+            customerLatLng = latLng;
+
+            // Pindahkan marker pelanggan
+            if (customerMarker) {
+                customerMarker.setLatLng(customerLatLng);
+            } else {
+                customerMarker = L.marker(customerLatLng).addTo(map).bindPopup("Pelanggan");
+            }
+
+            // Perbesar peta ke lokasi pelanggan
+            map.setView(customerLatLng, 15); // Perbesar ke zoom level 15
+
+            // Update info jarak dan ongkir
+            updateInfo();
+
+            // Gambar rute antara restoran dan pelanggan
+            getRoute(restoLatLng, customerLatLng);
+
+            // Update koordinat pada input
+            document.getElementById("customer_coordinates").value = `${customerLatLng.lat}, ${customerLatLng.lng}`;
+        }
+
+        // Mengambil rute menggunakan OSRM (Open Source Routing Machine)
+        function getRoute(start, end) {
+            const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?steps=true&overview=full`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.routes && data.routes.length > 0) {
+                        const route = data.routes[0].geometry.coordinates;
+                        const latLngs = route.map(coord => [coord[1], coord[0]]); // Ubah [lng, lat] ke [lat, lng]
+                        if (routeLine) {
+                            map.removeLayer(routeLine);
+                        }
+                        routeLine = L.polyline(latLngs, {
+                            color: 'blue'
+                        }).addTo(map);
+                    }
+                })
+                .catch(error => console.error('Error fetching route:', error));
+        }
+
+        // Panggil fungsi inisialisasi peta
+        initMap();
     </script>
 </body>
 
