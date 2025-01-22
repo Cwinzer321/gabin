@@ -31,6 +31,7 @@ Dengan menggunakan sistem ini, baik pelanggan maupun penyedia layanan mendapatka
 - **JavaScript** untuk interaksi dan perhitungan jarak.
 - **Google Maps API** untuk peta dan perhitungan rute.
 - **WhatsApp API** untuk pengiriman pesan langsung ke restoran/toko.
+- **Python** untuk menconvert titik koordinat menjadi link Gmap.
 
 ## Instalasi
 
