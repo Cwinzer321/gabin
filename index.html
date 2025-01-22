@@ -54,12 +54,9 @@
             border-radius: 15px;
         }
 
-        /* Tombol tetap di kiri atas */
-        .btn-fixed-left {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
+        /* Tombol yang ada di bagian atas halaman */
+        .btn-tentang {
+            margin: 20px;
             font-size: 1rem;
             padding: 10px 20px;
             background-color: #00e6e6;
@@ -68,7 +65,7 @@
             transition: all 0.3s ease;
         }
 
-        .btn-fixed-left:hover {
+        .btn-tentang:hover {
             background-color: #00b3b3;
             transform: scale(1.05);
         }
@@ -77,8 +74,8 @@
 
 <body>
     <!-- Tombol ke halaman Tentang -->
-    <button class="btn btn-fixed-left" onclick="window.location.href='tentang.html'">
-        Tentang DO pakai peta
+    <button class="btn btn-tentang" onclick="window.location.href='tentang.html'">
+        Tentang Order Delivery dengan Peta
     </button>
 
     <div class="container text-center">
