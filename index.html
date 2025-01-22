@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delivery Order dengan Peta</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/svgs/solid/map-marker-alt.svg" type="image/svg+xml">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -89,7 +88,6 @@
             font-size: 1rem;
         }
 
-        /* Tombol kembali untuk perangkat mobile */
         .kembali-tombol {
             display: block;
             margin-left: auto;
@@ -103,14 +101,13 @@
                 width: 100%;
                 font-size: 0.875rem;
                 padding: 8px 12px;
-
             }
         }
     </style>
 </head>
 
 <body>
-    <button class="btn btn-primary mt-3 mx-auto kembali-tombol" onclick="window.location.href='tentang.html'">Tentang Order Delivery</button>
+    <button class="btn btn-primary mt-3 mx-auto kembali-tombol" onclick="window.location.href='tentang.php'">Tentang Order Delivery</button>
     <div class="container text-center">
         <h1 class="text-center mb-4">Order Delivery dengan Peta</h1>
         <div class="row">
@@ -140,10 +137,9 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
     <script>
-        let map, restoMarker, customerMarker, routeLine;
+        let map, restoMarker, customerMarker, directionsService, directionsRenderer;
         const restoLatLng = {
             lat: -6.251627,
             lng: 107.246045
@@ -151,23 +147,30 @@
         let customerLatLng;
 
         function initMap() {
-            map = L.map('map').setView([restoLatLng.lat, restoLatLng.lng], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: restoLatLng,
+                zoom: 15,
+                mapTypeId: 'roadmap'
+            });
 
-            restoMarker = L.marker(restoLatLng).addTo(map).bindPopup("Restoran");
+            restoMarker = new google.maps.Marker({
+                position: restoLatLng,
+                map: map,
+                title: 'Restoran'
+            });
 
-            map.on('click', (e) => setCustomerLocationFromMap(e.latlng));
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+
+            map.addListener('click', (e) => setCustomerLocationFromMap(e.latLng));
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371; // Radius bumi dalam km
             const dLat = toRad(lat2 - lat1);
             const dLon = toRad(lon2 - lon1);
-            const a = Math.sin(dLat / 2) ** 2 +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLon / 2) ** 2;
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
         }
@@ -204,11 +207,15 @@
             if (coords) {
                 customerLatLng = coords;
                 if (customerMarker) {
-                    customerMarker.setLatLng(customerLatLng);
+                    customerMarker.setPosition(customerLatLng);
                 } else {
-                    customerMarker = L.marker(customerLatLng).addTo(map).bindPopup("Pelanggan");
+                    customerMarker = new google.maps.Marker({
+                        position: customerLatLng,
+                        map: map,
+                        title: 'Pelanggan'
+                    });
                 }
-                map.setView(customerLatLng, 15);
+                map.setCenter(customerLatLng);
                 updateInfo();
                 getRoute(restoLatLng, customerLatLng);
             } else {
@@ -219,117 +226,52 @@
         function setCustomerLocationFromMap(latLng) {
             customerLatLng = latLng;
             if (customerMarker) {
-                customerMarker.setLatLng(customerLatLng);
+                customerMarker.setPosition(customerLatLng);
             } else {
-                customerMarker = L.marker(customerLatLng).addTo(map).bindPopup("Pelanggan");
+                customerMarker = new google.maps.Marker({
+                    position: customerLatLng,
+                    map: map,
+                    title: 'Pelanggan'
+                });
             }
-            map.setView(customerLatLng, 15);
+            map.setCenter(customerLatLng);
             updateInfo();
             getRoute(restoLatLng, customerLatLng);
             document.getElementById("customer_coordinates").value = `${customerLatLng.lat}, ${customerLatLng.lng}`;
         }
 
-        function parseCoordinates(input) {
-            // Menghapus spasi yang tidak perlu dan memastikan format koordinat benar
-            input = input.replace(/\s+/g, '').toUpperCase();
-
-            // Regex untuk mendeteksi format DMS (derajat, menit, detik)
-            const dmsRegex = /(\d{1,3})°(\d{1,2})'(\d{1,2}(\.\d+)?)"/;
-
-            // Memeriksa jika input dalam format DMS (derajat, menit, detik)
-            const dmsMatch = input.match(dmsRegex);
-            if (dmsMatch) {
-                const degrees = parseFloat(dmsMatch[1]);
-                const minutes = parseFloat(dmsMatch[2]);
-                const seconds = parseFloat(dmsMatch[3]);
-
-                // Mengonversi DMS ke desimal
-                const decimal = degrees + (minutes / 60) + (seconds / 3600);
-
-                // Menghitung apakah koordinat mengarah ke Selatan (S) atau Barat (W)
-                if (input.includes('S') || input.includes('W')) {
-                    return {
-                        lat: -decimal,
-                        lng: -decimal
-                    }; // Jika Selatan atau Barat, tanda negatif
-                } else {
-                    return {
-                        lat: decimal,
-                        lng: decimal
-                    }; // Jika Utara atau Timur, tetap positif
+        function parseCoordinates(str) {
+            const coords = str.split(",");
+            if (coords.length === 2) {
+                const lat = parseFloat(coords[0]);
+                const lng = parseFloat(coords[1]);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    return { lat: lat, lng: lng };
                 }
             }
-
-            // Jika tidak dalam format DMS, coba parsing format desimal
-            const coords = input.split(',').map(coord => parseFloat(coord.trim()));
-            return coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1]) ? {
-                lat: coords[0],
-                lng: coords[1]
-            } : null;
+            return null;
         }
-
-        function setCustomerLocation() {
-            const input = document.getElementById("customer_coordinates").value.trim();
-            const coords = parseCoordinates(input);
-
-            if (coords) {
-                customerLatLng = coords;
-                if (customerMarker) {
-                    customerMarker.setLatLng(customerLatLng);
-                } else {
-                    customerMarker = L.marker(customerLatLng).addTo(map).bindPopup("Pelanggan");
-                }
-                map.setView(customerLatLng, 15);
-                updateInfo();
-                getRoute(restoLatLng, customerLatLng);
-            } else {
-                alert("Format koordinat tidak valid.");
-            }
-        }
-
-
-        function setCustomerLocation() {
-            const input = document.getElementById("customer_coordinates").value.trim();
-            const coords = parseCoordinates(input);
-
-            if (coords) {
-                customerLatLng = coords;
-                if (customerMarker) {
-                    customerMarker.setLatLng(customerLatLng);
-                } else {
-                    customerMarker = L.marker(customerLatLng).addTo(map).bindPopup("Pelanggan");
-                }
-                map.setView(customerLatLng, 15);
-                updateInfo();
-                getRoute(restoLatLng, customerLatLng);
-            } else {
-                alert("Format koordinat tidak valid.");
-            }
-        }
-
-
 
         function getRoute(start, end) {
-            const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=false&steps=false`;
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (routeLine) map.removeLayer(routeLine);
-                    const route = data.routes[0].geometry.coordinates;
-                    const latLngs = route.map(([lng, lat]) => [lat, lng]);
-                    routeLine = L.polyline(latLngs, {
-                        color: '#00e6e6'
-                    }).addTo(map);
-                })
-                .catch(console.error);
+            const request = {
+                origin: start,
+                destination: end,
+                travelMode: 'DRIVING'
+            };
+
+            directionsService.route(request, (result, status) => {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(result);
+                } else {
+                    alert("Tidak dapat menghitung rute.");
+                }
+            });
         }
 
         function openGoogleMaps() {
-            const url = `https://www.google.com/maps?q=${restoLatLng.lat},${restoLatLng.lng}`;
-            window.open(url, '_blank');
+            const mapURL = `https://www.google.com/maps?q=${restoLatLng.lat},${restoLatLng.lng}`;
+            window.open(mapURL, "_blank");
         }
-
-        initMap();
     </script>
 </body>
 
