@@ -89,7 +89,6 @@
                     <div class="card-body">
                         <h5 class="card-title">Masukkan Koordinat Kamu</h5>
                         <input type="text" class="form-control mb-3 input-box" id="customer_coordinates" placeholder="Contoh: -6.251627, 107.246045">
-                        <button class="btn btn-primary w-100 mb-3" onclick="setCustomerLocation()">Set Lokasi Pelanggan</button>
                         <button class="btn btn-primary w-100 mb-3" onclick="setLocationByGeolocation()">Gunakan Lokasi Saya</button>
                         <div class="mt-3">
                             <p><strong>Jarak:</strong> <span id="jarak">-</span> km</p>
@@ -120,17 +119,6 @@
             }).addTo(map);
 
             restoMarker = L.marker(restoLatLng).addTo(map).bindPopup("Restoran");
-        }
-
-        function setCustomerLocation() {
-            const input = document.getElementById("customer_coordinates").value.trim();
-            const coords = parseCoordinates(input);
-
-            if (coords) {
-                updateCustomerLocation(coords);
-            } else {
-                alert("Format koordinat tidak valid.");
-            }
         }
 
         function setLocationByGeolocation() {
