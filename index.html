@@ -194,22 +194,60 @@
         }
 
         function setCustomerLocation() {
-            const input = document.getElementById("customer_coordinates").value.trim();
-            const coords = parseCoordinates(input);
-
-            if (coords) {
-                customerLatLng = coords;
-                if (customerMarker) {
-                    customerMarker.setLatLng(customerLatLng);
-                } else {
-                    customerMarker = L.marker(customerLatLng).addTo(map).bindPopup("Pelanggan");
-                }
-                map.setView(customerLatLng, 15);
-                updateInfo();
-                getRoute(restoLatLng, customerLatLng);
-            } else {
-                alert("Format koordinat tidak valid.");
+            // Periksa apakah browser mendukung geolocation
+            if (!navigator.geolocation) {
+                alert("Geolocation tidak didukung oleh browser Anda.");
+                return;
             }
+
+            // Dapatkan lokasi pengguna
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    // Koordinat pengguna
+                    customerLatLng = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+
+                    // Tambahkan marker pelanggan ke peta atau perbarui marker yang sudah ada
+                    if (customerMarker) {
+                        customerMarker.setLatLng(customerLatLng);
+                    } else {
+                        customerMarker = L.marker(customerLatLng)
+                            .addTo(map)
+                            .bindPopup("Pelanggan");
+                    }
+
+                    // Atur tampilan peta ke lokasi pelanggan
+                    map.setView(customerLatLng, 15);
+
+                    // Perbarui input koordinat di form
+                    document.getElementById("customer_coordinates").value =
+                        `${customerLatLng.lat}, ${customerLatLng.lng}`;
+
+                    // Hitung jarak dan ongkir
+                    updateInfo();
+
+                    // Gambar rute dari restoran ke pelanggan
+                    getRoute(restoLatLng, customerLatLng);
+                },
+                (error) => {
+                    // Tangani error geolocation
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            alert("Anda harus mengizinkan akses lokasi.");
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            alert("Informasi lokasi tidak tersedia.");
+                            break;
+                        case error.TIMEOUT:
+                            alert("Permintaan lokasi melebihi batas waktu.");
+                            break;
+                        default:
+                            alert("Terjadi kesalahan saat mendapatkan lokasi.");
+                    }
+                }
+            );
         }
 
         function setCustomerLocationFromMap(latLng) {
