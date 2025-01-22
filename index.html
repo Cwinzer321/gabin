@@ -6,8 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delivery Order dengan Peta</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-    <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/svgs/solid/map-marker-alt.svg" type="image/svg+xml">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
@@ -21,35 +19,18 @@
             margin-top: 30px;
         }
 
-        .whatsapp-btn {
-            display: none;
-            width: 100%;
-        }
-
         .input-box {
-            width: 100%;
             background-color: #333;
             color: #eaeaea;
             border: none;
             padding: 10px;
             border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .input-box:focus {
-            outline: none;
-            background-color: #444;
         }
 
         .card {
             background-color: #1e1e1e;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-title {
-            font-weight: 600;
-            font-size: 1.25rem;
         }
 
         .btn-primary {
@@ -60,18 +41,6 @@
 
         .btn-primary:hover {
             background-color: #00b3b3;
-            transform: scale(1.05);
-        }
-
-        .btn-success {
-            background-color: #4caf50;
-            border: none;
-            transition: all 0.3s ease;
-        }
-
-        .btn-success:hover {
-            background-color: #45a049;
-            transform: scale(1.05);
         }
 
         #map {
@@ -79,38 +48,12 @@
             height: 400px;
             border-radius: 15px;
         }
-
-        .text-center {
-            font-size: 2rem;
-            color: #00e6e6;
-        }
-
-        .mt-3 p {
-            font-size: 1rem;
-        }
-
-        .kembali-tombol {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            text-align: center;
-            max-width: 200px;
-        }
-
-        @media (max-width: 576px) {
-            .kembali-tombol {
-                width: 100%;
-                font-size: 0.875rem;
-                padding: 8px 12px;
-            }
-        }
     </style>
 </head>
 
 <body>
-    <button class="btn btn-primary mt-3 mx-auto kembali-tombol" onclick="window.location.href='tentang.html'">Tentang Order Delivery</button>
     <div class="container text-center">
-        <h1 class="text-center mb-4">Order Delivery dengan Peta</h1>
+        <h1 class="mb-4">Order Delivery dengan Peta</h1>
         <div class="row">
             <div class="col-md-8">
                 <div id="map"></div>
@@ -119,18 +62,11 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Masukkan Koordinat Kamu</h5>
-                        <input type="text" class="form-control mb-3 input-box" id="customer_coordinates" placeholder="Contoh: -6.251627, 107.246045" />
-                        <button class="btn btn-primary w-100" onclick="setCustomerLocation()">Set Lokasi Pelanggan</button>
-
+                        <input type="text" class="form-control mb-3 input-box" id="customer_coordinates" placeholder="Koordinat akan otomatis diisi" readonly>
+                        <button class="btn btn-primary w-100 mb-3" onclick="setCustomerLocation()">Set Lokasi Pelanggan</button>
                         <div class="mt-3">
                             <p><strong>Jarak:</strong> <span id="jarak">-</span> km</p>
                             <p><strong>Ongkir:</strong> <span id="ongkir">-</span></p>
-                        </div>
-
-                        <button id="whatsappButton" class="btn btn-success whatsapp-btn">Kirim ke WhatsApp</button>
-
-                        <div class="mt-3">
-                            <button class="btn btn-primary w-100" onclick="openGoogleMaps()">Buka Google Maps untuk Salin Koordinat</button>
                         </div>
                     </div>
                 </div>
@@ -139,14 +75,9 @@
     </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let map, restoMarker, customerMarker, routeLine;
-        const restoLatLng = {
-            lat: -6.251627,
-            lng: 107.246045
-        }; // Lokasi Restoran (Fixed)
-        let customerLatLng;
+        const restoLatLng = { lat: -6.251627, lng: 107.246045 };
 
         function initMap() {
             map = L.map('map').setView([restoLatLng.lat, restoLatLng.lng], 15);
@@ -155,84 +86,32 @@
             }).addTo(map);
 
             restoMarker = L.marker(restoLatLng).addTo(map).bindPopup("Restoran");
-
-            map.on('click', (e) => setCustomerLocationFromMap(e.latlng));
-        }
-
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Radius bumi dalam km
-            const dLat = toRad(lat2 - lat1);
-            const dLon = toRad(lon2 - lon1);
-            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-        }
-
-        function toRad(degrees) {
-            return degrees * (Math.PI / 180);
-        }
-
-        function calculateOngkir(distance) {
-            const farePerKm = 500; // Ongkir per km (Rp 500)
-            return Math.ceil(distance) * farePerKm;
-        }
-
-        function updateInfo() {
-            const distance = calculateDistance(restoLatLng.lat, restoLatLng.lng, customerLatLng.lat, customerLatLng.lng);
-            document.getElementById("jarak").innerText = distance.toFixed(2);
-
-            const ongkir = calculateOngkir(distance);
-            document.getElementById("ongkir").innerText = `Rp${ongkir.toLocaleString("id-ID")}`;
-
-            const restoranWA = "6285157204233"; // Nomor WhatsApp Restoran
-            const pesanWA = `Halo, saya ingin memesan makanan. Lokasi Saya: Lat: ${customerLatLng.lat}, Lng: ${customerLatLng.lng} - Jarak: ${distance.toFixed(2)} km - Ongkir: Rp${ongkir.toLocaleString("id-ID")}. Mohon konfirmasi pesanan saya.`;
-            const linkWA = `https://wa.me/${restoranWA}?text=${encodeURIComponent(pesanWA)}`;
-
-            const whatsappButton = document.getElementById("whatsappButton");
-            whatsappButton.style.display = "block";
-            whatsappButton.onclick = () => window.open(linkWA, "_blank");
         }
 
         function setCustomerLocation() {
-            // Periksa apakah browser mendukung geolocation
             if (!navigator.geolocation) {
                 alert("Geolocation tidak didukung oleh browser Anda.");
                 return;
             }
 
-            // Dapatkan lokasi pengguna
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    // Koordinat pengguna
-                    customerLatLng = {
+                    const customerLatLng = {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude,
                     };
 
-                    // Tambahkan marker pelanggan ke peta atau perbarui marker yang sudah ada
                     if (customerMarker) {
                         customerMarker.setLatLng(customerLatLng);
                     } else {
-                        customerMarker = L.marker(customerLatLng)
-                            .addTo(map)
-                            .bindPopup("Pelanggan");
+                        customerMarker = L.marker(customerLatLng).addTo(map).bindPopup("Pelanggan");
                     }
 
-                    // Atur tampilan peta ke lokasi pelanggan
                     map.setView(customerLatLng, 15);
-
-                    // Perbarui input koordinat di form
-                    document.getElementById("customer_coordinates").value =
-                        `${customerLatLng.lat}, ${customerLatLng.lng}`;
-
-                    // Hitung jarak dan ongkir
-                    updateInfo();
-
-                    // Gambar rute dari restoran ke pelanggan
-                    getRoute(restoLatLng, customerLatLng);
+                    document.getElementById("customer_coordinates").value = `${customerLatLng.lat}, ${customerLatLng.lng}`;
+                    updateInfo(customerLatLng);
                 },
                 (error) => {
-                    // Tangani error geolocation
                     switch (error.code) {
                         case error.PERMISSION_DENIED:
                             alert("Anda harus mengizinkan akses lokasi.");
@@ -250,55 +129,31 @@
             );
         }
 
-        function setCustomerLocationFromMap(latLng) {
-            customerLatLng = latLng;
-            if (customerMarker) {
-                customerMarker.setLatLng(customerLatLng);
-            } else {
-                customerMarker = L.marker(customerLatLng).addTo(map).bindPopup("Pelanggan");
-            }
-            map.setView(customerLatLng, 15);
-            updateInfo();
-            getRoute(restoLatLng, customerLatLng);
-            document.getElementById("customer_coordinates").value = `${customerLatLng.lat}, ${customerLatLng.lng}`;
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a = Math.sin(dLat / 2) ** 2 +
+                      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+                      Math.sin(dLon / 2) ** 2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
         }
 
-        function parseCoordinates(str) {
-            const coords = str.split(',').map(s => parseFloat(s.trim()));
-            if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-                return {
-                    lat: coords[0],
-                    lng: coords[1]
-                };
-            }
-            return null;
+        function calculateOngkir(distance) {
+            const farePerKm = 500;
+            return Math.ceil(distance) * farePerKm;
         }
 
-        function getRoute(from, to) {
-            if (routeLine) {
-                map.removeLayer(routeLine);
-            }
+        function updateInfo(customerLatLng) {
+            const distance = calculateDistance(
+                restoLatLng.lat, restoLatLng.lng,
+                customerLatLng.lat, customerLatLng.lng
+            );
+            document.getElementById("jarak").innerText = distance.toFixed(2);
 
-            const routeUrl = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=false&alternatives=false&geometries=polyline`;
-            fetch(routeUrl)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.routes && data.routes.length > 0) {
-                        const route = data.routes[0].geometry;
-                        routeLine = L.polyline(L.Polyline.fromEncoded(route), {
-                            color: 'blue'
-                        }).addTo(map);
-                    }
-                })
-                .catch(error => console.error("Error fetching route:", error));
-        }
-
-        function openGoogleMaps() {
-            if (customerLatLng) {
-                window.open(`https://www.google.com/maps?q=${customerLatLng.lat},${customerLatLng.lng}`, "_blank");
-            } else {
-                alert("Set lokasi pelanggan terlebih dahulu.");
-            }
+            const ongkir = calculateOngkir(distance);
+            document.getElementById("ongkir").innerText = `Rp${ongkir.toLocaleString("id-ID")}`;
         }
 
         initMap();
