@@ -53,6 +53,10 @@
             height: 400px;
             border-radius: 15px;
         }
+
+        footer {
+            margin-top: 30px;
+        }
     </style>
 </head>
 
@@ -67,8 +71,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Masukkan Koordinat Kamu</h5>
-                        <input type="text" class="form-control mb-3 input-box" id="customer_coordinates" placeholder="Contoh: -6.251627, 107.246045">
-                        <button class="btn btn-primary w-100 mb-3" onclick="setCustomerLocation()">Set Lokasi Pelanggan</button>
+                        <input type="text" class="form-control mb-3 input-box" id="customer_coordinates" placeholder="Contoh: -6.251627, 107.246045" readonly>
                         <button class="btn btn-primary w-100 mb-3" onclick="setLocationByGeolocation()">Gunakan Lokasi Saya</button>
                         <div class="mt-3">
                             <p><strong>Jarak:</strong> <span id="jarak">-</span> km</p>
@@ -84,6 +87,10 @@
         </div>
     </div>
 
+    <footer class="text-center mt-4">
+        <button class="btn btn-secondary" onclick="showAbout()">Tentang</button>
+    </footer>
+
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         let map, restoMarker, customerMarker, routeLine;
@@ -96,17 +103,6 @@
             }).addTo(map);
 
             restoMarker = L.marker(restoLatLng).addTo(map).bindPopup("Restoran");
-        }
-
-        function setCustomerLocation() {
-            const input = document.getElementById("customer_coordinates").value.trim();
-            const coords = parseCoordinates(input);
-
-            if (coords) {
-                updateCustomerLocation(coords);
-            } else {
-                alert("Format koordinat tidak valid.");
-            }
         }
 
         function setLocationByGeolocation() {
@@ -140,14 +136,6 @@
             document.getElementById("customer_coordinates").value = `${latLng.lat}, ${latLng.lng}`;
             updateInfo(latLng);
             getRoute(restoLatLng, latLng);
-        }
-
-        function parseCoordinates(str) {
-            const coords = str.split(',').map(s => parseFloat(s.trim()));
-            if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-                return { lat: coords[0], lng: coords[1] };
-            }
-            return null;
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -207,6 +195,10 @@
             } else {
                 alert("Masukkan koordinat terlebih dahulu.");
             }
+        }
+
+        function showAbout() {
+            alert("Aplikasi ini dibuat untuk mempermudah pengiriman makanan menggunakan peta interaktif.");
         }
 
         initMap();
