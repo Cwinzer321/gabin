@@ -17,7 +17,6 @@
             color: #eaeaea;
             padding-top: 30px;
             padding-bottom: 80px;
-            /* Tambahkan padding bawah */
         }
 
         .container {
@@ -68,18 +67,6 @@
             margin-top: 20px;
         }
 
-        /* Gaya utama tombol */
-        .btn-primary {
-            background-color: #00e6e6;
-            border: none;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            background-color: #00b3b3;
-            transform: scale(1.05);
-        }
-
         /* Tombol tetap di bagian bawah dengan posisi tetap */
         .btn-fixed {
             position: fixed;
@@ -93,11 +80,8 @@
         @media (max-width: 576px) {
             .btn-fixed {
                 font-size: 0.9rem;
-                /* Ukuran teks lebih kecil */
                 padding: 8px 15px;
-                /* Padding lebih kecil */
                 bottom: 20px;
-                /* Jarak bawah lebih kecil */
             }
         }
     </style>
@@ -112,35 +96,37 @@
             <div class="card-body">
                 <h2 class="section-title">Apa itu Order Delivery dengan Peta?</h2>
                 <p>
-                    Order Delivery dengan Peta adalah sistem yang memanfaatkan teknologi peta untuk mempermudah proses pemesanan dan pengiriman makanan atau barang. Sistem ini memungkinkan pelanggan untuk menentukan lokasi mereka secara langsung di peta, menghitung jarak dari restoran atau toko, dan menghitung ongkos kirim secara otomatis.
+                    Order Delivery dengan Peta adalah solusi inovatif yang memanfaatkan teknologi peta untuk mempermudah proses pemesanan dan pengiriman barang. Sistem ini memungkinkan pelanggan untuk memilih lokasi mereka langsung dari peta atau memasukkan koordinat, menghitung jarak dari restoran atau toko, dan menghitung ongkos kirim secara otomatis berdasarkan jarak yang dihitung.
                 </p>
 
                 <h2 class="section-title">Fitur Utama</h2>
                 <ul>
-                    <li><strong>Menentukan Lokasi Pelanggan:</strong> Pelanggan dapat memasukkan koordinat atau memilih lokasi mereka langsung dari peta untuk menentukan tempat pengantaran.</li>
-                    <li><strong>Perhitungan Jarak:</strong> Sistem menghitung jarak antara restoran/toko dan lokasi pelanggan dengan akurasi yang tinggi menggunakan teknologi GPS.</li>
-                    <li><strong>Perhitungan Ongkir:</strong> Berdasarkan jarak yang dihitung, sistem secara otomatis menghitung biaya pengiriman atau ongkir yang harus dibayar oleh pelanggan.</li>
-                    <li><strong>Integrasi WhatsApp:</strong> Setelah pemesanan, pelanggan dapat mengirimkan informasi pesanan mereka langsung ke restoran atau toko via WhatsApp untuk konfirmasi lebih lanjut.</li>
-                    <li><strong>Integrasi Google Maps:</strong> Pelanggan dapat membuka Google Maps untuk melihat rute atau menyalin koordinat mereka untuk keperluan lain.</li>
+                    <li><strong>Penentuan Lokasi Pelanggan:</strong> Pelanggan dapat dengan mudah memilih lokasi mereka langsung dari peta atau memasukkan koordinat lokasi secara manual.</li>
+                    <li><strong>Perhitungan Jarak yang Akurat:</strong> Sistem akan secara otomatis menghitung jarak antara lokasi pelanggan dan restoran atau toko menggunakan teknologi GPS.</li>
+                    <li><strong>Perhitungan Ongkir Otomatis:</strong> Ongkos kirim dihitung berdasarkan jarak yang terukur, dan sistem akan menampilkan biaya pengiriman yang sesuai dengan lokasi pelanggan.</li>
+                    <li><strong>Integrasi dengan WhatsApp:</strong> Setelah pemesanan, pelanggan dapat langsung mengirimkan informasi pesanan ke restoran atau toko via WhatsApp untuk konfirmasi lebih lanjut.</li>
+                    <li><strong>Integrasi Google Maps:</strong> Pelanggan dapat membuka Google Maps untuk melihat rute perjalanan, serta menyalin atau membagikan koordinat lokasi mereka.</li>
                 </ul>
 
                 <h2 class="section-title">Manfaat</h2>
                 <p>
-                    Dengan menggunakan sistem ini, baik pelanggan maupun penyedia layanan mendapatkan beberapa keuntungan, di antaranya:
+                    Dengan menggunakan sistem Order Delivery dengan Peta, pelanggan dan penyedia layanan dapat menikmati sejumlah keuntungan sebagai berikut:
                 </p>
                 <ul>
-                    <li><strong>Mudah dan Cepat:</strong> Pelanggan dapat dengan mudah memilih lokasi dan melakukan pemesanan tanpa perlu repot mencari alamat secara manual.</li>
-                    <li><strong>Akurasi Pengiriman:</strong> Sistem ini memungkinkan perhitungan jarak dan ongkir yang lebih akurat dan efisien, memastikan pengiriman tepat waktu.</li>
-                    <li><strong>Kenyamanan:</strong> Pengguna dapat langsung mengirimkan informasi pesanan melalui WhatsApp, mengurangi kemungkinan kesalahan komunikasi.</li>
-                    <li><strong>Fleksibilitas:</strong> Sistem memungkinkan pelanggan untuk memilih berbagai metode komunikasi dan informasi pengantaran, baik melalui peta atau koordinat manual.</li>
+                    <li><strong>Kemudahan dan Kecepatan:</strong> Pelanggan dapat dengan cepat menentukan lokasi dan memesan tanpa harus repot mencari alamat secara manual.</li>
+                    <li><strong>Akurasi dalam Pengiriman:</strong> Perhitungan jarak dan ongkir yang lebih akurat memastikan pengiriman tepat waktu dan biaya yang transparan.</li>
+                    <li><strong>Kenyamanan Komunikasi:</strong> Sistem ini memungkinkan pelanggan untuk langsung mengirimkan informasi pesanan melalui WhatsApp, mengurangi kemungkinan kesalahan komunikasi.</li>
+                    <li><strong>Fleksibilitas Penggunaan:</strong> Pelanggan bisa memilih antara menggunakan peta untuk menentukan lokasi atau memasukkan koordinat secara manual untuk kenyamanan lebih.</li>
                 </ul>
+                
                 <h2 class="section-title">Bagaimana Cara Kerjanya?</h2>
                 <p>
-                    1. Pelanggan memasukkan koordinat lokasi mereka atau memilih lokasi langsung pada peta.
-                    <br> 2. Sistem menghitung jarak antara lokasi pelanggan dan restoran atau toko.
-                    <br> 3. Ongkir dihitung berdasarkan jarak dan ditampilkan kepada pelanggan.
-                    <br> 4. Pelanggan dapat mengirimkan informasi pesanan mereka ke restoran via WhatsApp untuk konfirmasi.
-                    <br> 5. Google Maps akan terbuka untuk melihat rute atau menyalin koordinat.
+                    Proses Order Delivery dengan Peta sangat mudah dan langsung:
+                    <br> 1. Pelanggan memilih atau memasukkan koordinat lokasi mereka menggunakan peta.
+                    <br> 2. Sistem otomatis menghitung jarak dari restoran atau toko ke lokasi pelanggan.
+                    <br> 3. Biaya ongkir dihitung berdasarkan jarak dan ditampilkan kepada pelanggan.
+                    <br> 4. Pelanggan dapat mengirimkan detail pesanan ke restoran atau toko melalui WhatsApp.
+                    <br> 5. Google Maps membuka rute perjalanan untuk melihat atau menyalin koordinat lokasi.
                 </p>
             </div>
         </div>
@@ -152,7 +138,6 @@
             Coba Order Delivery Sekarang!
         </button>
     </div>
-
 
 </body>
 
