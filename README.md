@@ -36,4 +36,4 @@ Dengan menggunakan sistem ini, baik pelanggan maupun penyedia layanan mendapatka
 
 1. Clone repositori ini ke lokal komputer Anda:
    ```bash
-   git clone https://github.com/Cwinzer321/repository-gabin.git
+   git clone https://github.com/Cwinzer321/gabin.git
