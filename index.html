@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delivery Order dengan Peta</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/svgs/solid/map-marker-alt.svg" type="image/svg+xml">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -107,7 +108,7 @@
 </head>
 
 <body>
-    <button class="btn btn-primary mt-3 mx-auto kembali-tombol" onclick="window.location.href='tentang.php'">Tentang Order Delivery</button>
+    <button class="btn btn-primary mt-3 mx-auto kembali-tombol" onclick="window.location.href='tentang.html'">Tentang Order Delivery</button>
     <div class="container text-center">
         <h1 class="text-center mb-4">Order Delivery dengan Peta</h1>
         <div class="row">
@@ -137,9 +138,10 @@
         </div>
     </div>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let map, restoMarker, customerMarker, directionsService, directionsRenderer;
+        let map, restoMarker, customerMarker, routeLine;
         const restoLatLng = {
             lat: -6.251627,
             lng: 107.246045
@@ -147,23 +149,14 @@
         let customerLatLng;
 
         function initMap() {
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: restoLatLng,
-                zoom: 15,
-                mapTypeId: 'roadmap'
-            });
+            map = L.map('map').setView([restoLatLng.lat, restoLatLng.lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
 
-            restoMarker = new google.maps.Marker({
-                position: restoLatLng,
-                map: map,
-                title: 'Restoran'
-            });
+            restoMarker = L.marker(restoLatLng).addTo(map).bindPopup("Restoran");
 
-            directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer();
-            directionsRenderer.setMap(map);
-
-            map.addListener('click', (e) => setCustomerLocationFromMap(e.latLng));
+            map.on('click', (e) => setCustomerLocationFromMap(e.latlng));
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -207,15 +200,11 @@
             if (coords) {
                 customerLatLng = coords;
                 if (customerMarker) {
-                    customerMarker.setPosition(customerLatLng);
+                    customerMarker.setLatLng(customerLatLng);
                 } else {
-                    customerMarker = new google.maps.Marker({
-                        position: customerLatLng,
-                        map: map,
-                        title: 'Pelanggan'
-                    });
+                    customerMarker = L.marker(customerLatLng).addTo(map).bindPopup("Pelanggan");
                 }
-                map.setCenter(customerLatLng);
+                map.setView(customerLatLng, 15);
                 updateInfo();
                 getRoute(restoLatLng, customerLatLng);
             } else {
@@ -226,52 +215,55 @@
         function setCustomerLocationFromMap(latLng) {
             customerLatLng = latLng;
             if (customerMarker) {
-                customerMarker.setPosition(customerLatLng);
+                customerMarker.setLatLng(customerLatLng);
             } else {
-                customerMarker = new google.maps.Marker({
-                    position: customerLatLng,
-                    map: map,
-                    title: 'Pelanggan'
-                });
+                customerMarker = L.marker(customerLatLng).addTo(map).bindPopup("Pelanggan");
             }
-            map.setCenter(customerLatLng);
+            map.setView(customerLatLng, 15);
             updateInfo();
             getRoute(restoLatLng, customerLatLng);
             document.getElementById("customer_coordinates").value = `${customerLatLng.lat}, ${customerLatLng.lng}`;
         }
 
         function parseCoordinates(str) {
-            const coords = str.split(",");
-            if (coords.length === 2) {
-                const lat = parseFloat(coords[0]);
-                const lng = parseFloat(coords[1]);
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    return { lat: lat, lng: lng };
-                }
+            const coords = str.split(',').map(s => parseFloat(s.trim()));
+            if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                return {
+                    lat: coords[0],
+                    lng: coords[1]
+                };
             }
             return null;
         }
 
-        function getRoute(start, end) {
-            const request = {
-                origin: start,
-                destination: end,
-                travelMode: 'DRIVING'
-            };
+        function getRoute(from, to) {
+            if (routeLine) {
+                map.removeLayer(routeLine);
+            }
 
-            directionsService.route(request, (result, status) => {
-                if (status === 'OK') {
-                    directionsRenderer.setDirections(result);
-                } else {
-                    alert("Tidak dapat menghitung rute.");
-                }
-            });
+            const routeUrl = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=false&alternatives=false&geometries=polyline`;
+            fetch(routeUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.routes && data.routes.length > 0) {
+                        const route = data.routes[0].geometry;
+                        routeLine = L.polyline(L.Polyline.fromEncoded(route), {
+                            color: 'blue'
+                        }).addTo(map);
+                    }
+                })
+                .catch(error => console.error("Error fetching route:", error));
         }
 
         function openGoogleMaps() {
-            const mapURL = `https://www.google.com/maps?q=${restoLatLng.lat},${restoLatLng.lng}`;
-            window.open(mapURL, "_blank");
+            if (customerLatLng) {
+                window.open(`https://www.google.com/maps?q=${customerLatLng.lat},${customerLatLng.lng}`, "_blank");
+            } else {
+                alert("Set lokasi pelanggan terlebih dahulu.");
+            }
         }
+
+        initMap();
     </script>
 </body>
 
