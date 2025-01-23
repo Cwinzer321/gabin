@@ -181,24 +181,31 @@
             return Math.ceil(distance) * farePerKm;
         }
 
-        function updateInfo(customerLatLng) {
-            const distance = calculateDistance(
-                restoLatLng.lat, restoLatLng.lng,
-                customerLatLng.lat, customerLatLng.lng
-            );
-            document.getElementById("jarak").innerText = distance.toFixed(2);
+      function updateInfo(customerLatLng) {
+        const distance = calculateDistance(
+            restoLatLng.lat, restoLatLng.lng,
+            customerLatLng.lat, customerLatLng.lng
+        );
+        document.getElementById("jarak").innerText = distance.toFixed(2);
 
-            const ongkir = calculateOngkir(distance);
-            document.getElementById("ongkir").innerText = `Rp${ongkir.toLocaleString("id-ID")}`;
-
-            const whatsappButton = document.getElementById("whatsappButton");
-            whatsappButton.style.display = "block";
-            whatsappButton.onclick = () => {
-                const pesanWA = `Halo, saya ingin memesan makanan. Lokasi saya: Lat: ${customerLatLng.lat}, Lng: ${customerLatLng.lng}. Jarak: ${distance.toFixed(2)} km. Ongkir: Rp${ongkir.toLocaleString("id-ID")}.`;
-                const linkWA = `https://wa.me/6285157204233?text=${encodeURIComponent(pesanWA)}`;
-                window.open(linkWA, "_blank");
-            };
+        if (distance > 15) {
+            alert("Jarak sangat jauh, kami tidak dapat melakukan delivery order ke lokasi ini.");
+            document.getElementById("ongkir").innerText = "-";
+            document.getElementById("whatsappButton").style.display = "none";
+            return;
         }
+
+        const ongkir = calculateOngkir(distance);
+        document.getElementById("ongkir").innerText = `Rp${ongkir.toLocaleString("id-ID")}`;
+
+        const whatsappButton = document.getElementById("whatsappButton");
+        whatsappButton.style.display = "block";
+        whatsappButton.onclick = () => {
+            const pesanWA = `Halo, saya ingin memesan makanan. Lokasi saya: Lat: ${customerLatLng.lat}, Lng: ${customerLatLng.lng}. Jarak: ${distance.toFixed(2)} km. Ongkir: Rp${ongkir.toLocaleString("id-ID")}.`;
+            const linkWA = `https://wa.me/6285157204233?text=${encodeURIComponent(pesanWA)}`;
+            window.open(linkWA, "_blank");
+        };
+    }
 
         function getRoute(from, to) {
             if (routeLine) {
