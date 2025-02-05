@@ -30,6 +30,7 @@ Dengan menggunakan sistem ini, baik pelanggan maupun penyedia layanan mendapatka
 - **HTML** & **CSS** untuk tampilan halaman.
 - **JavaScript** untuk interaksi dan perhitungan jarak.
 - **WhatsApp API** untuk pengiriman pesan langsung ke restoran/toko.
+- **Python** untuk convert titik kordinat menjadi link Gmap.
 
 ## Instalasi
 
