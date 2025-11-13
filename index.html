@@ -171,6 +171,19 @@
             color: var(--text-secondary);
         }
 
+        textarea.input-box {
+            font-family: 'Poppins', sans-serif;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
         .card {
             background-color: var(--bg-card);
             border-radius: 20px;
@@ -502,6 +515,21 @@
                                 </div>
                             </div>
                             
+                            <div class="mt-3" id="noteSection" style="display: none;">
+                                <label for="customer_note" class="form-label" style="color: var(--text-primary); font-weight: 500; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-sticky-note"></i> Catatan / Request Khusus
+                                </label>
+                                <textarea 
+                                    class="form-control input-box" 
+                                    id="customer_note" 
+                                    rows="3"
+                                    placeholder="Contoh: Tolong jangan pakai cabai, atau tambahkan extra keju..."
+                                    style="resize: vertical; min-height: 80px;"></textarea>
+                                <small class="text-muted" style="color: var(--text-secondary); font-size: 0.85rem;">
+                                    <i class="fas fa-info-circle"></i> Opsional: Tambahkan catatan atau request khusus untuk pesanan Anda
+                                </small>
+                            </div>
+                            
                             <button id="whatsappButton" class="btn btn-success w-100 mt-3" style="display: none;">
                                 <i class="fab fa-whatsapp"></i>
                                 Kirim ke WhatsApp
@@ -829,6 +857,9 @@
                 const ongkir = calculateOngkir(distance);
                 document.getElementById("ongkir").innerText = `Rp ${ongkir.toLocaleString("id-ID")}`;
 
+                // Tampilkan section note
+                document.getElementById("noteSection").style.display = "block";
+
                 const whatsappButton = document.getElementById("whatsappButton");
                 whatsappButton.style.display = "block";
                 whatsappButton.onclick = () => {
@@ -841,11 +872,22 @@
                         distanceForMessage = distance.toFixed(2) + " km";
                     }
                     
+                    // Ambil note/catatan dari input
+                    const customerNote = document.getElementById("customer_note").value.trim();
+                    
                     // Buat link Google Maps untuk share location
                     const googleMapsLink = `https://www.google.com/maps?q=${customerLatLng.lat},${customerLatLng.lng}`;
                     
-                    // Pesan WhatsApp dengan link Google Maps
-                    const pesanWA = `Halo, saya ingin memesan makanan.\n\n📍 Lokasi Saya:\n${googleMapsLink}\n\nKoordinat:\nLatitude: ${customerLatLng.lat.toFixed(6)}\nLongitude: ${customerLatLng.lng.toFixed(6)}\n\n📏 Jarak: ${distanceForMessage}\n💰 Ongkir: Rp ${ongkir.toLocaleString("id-ID")}\n\nKlik link di atas untuk melihat lokasi di Google Maps.\n\nTerima kasih!`;
+                    // Buat pesan WhatsApp
+                    let pesanWA = `Halo, saya ingin memesan makanan.\n\n📍 Lokasi Saya:\n${googleMapsLink}\n\nKoordinat:\nLatitude: ${customerLatLng.lat.toFixed(6)}\nLongitude: ${customerLatLng.lng.toFixed(6)}\n\n📏 Jarak: ${distanceForMessage}\n💰 Ongkir: Rp ${ongkir.toLocaleString("id-ID")}`;
+                    
+                    // Tambahkan note jika ada
+                    if (customerNote) {
+                        pesanWA += `\n\n📝 Catatan / Request:\n${customerNote}`;
+                    }
+                    
+                    pesanWA += `\n\nKlik link di atas untuk melihat lokasi di Google Maps.\n\nTerima kasih!`;
+                    
                     const linkWA = `https://wa.me/6285157204233?text=${encodeURIComponent(pesanWA)}`;
                     window.open(linkWA, "_blank");
                 };
