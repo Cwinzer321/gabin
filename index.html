@@ -636,13 +636,31 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let map, restoMarker, customerMarker, routeLine;
+        // ============================================
+        // VARIABEL GLOBAL
+        // ============================================
+        
+        // Variabel untuk menyimpan instance peta dan marker
+        let map;              // Instance peta Leaflet
+        let restoMarker;      // Marker untuk lokasi restoran
+        let customerMarker;   // Marker untuk lokasi pelanggan
+        let routeLine;        // Garis rute yang menghubungkan restoran dan pelanggan
+        
+        // Koordinat lokasi restoran (default location)
         const restoLatLng = {
-            lat: -6.251627,
-            lng: 107.246045
+            lat: -6.251627,   // Latitude restoran
+            lng: 107.246045   // Longitude restoran
         };
 
-        // Toast notification function
+        // ============================================
+        // FUNGSI UTILITAS - TOAST NOTIFICATION
+        // ============================================
+        
+        /**
+         * Menampilkan notifikasi toast (popup notification)
+         * @param {string} message - Pesan yang akan ditampilkan
+         * @param {string} type - Tipe notifikasi: 'info', 'success', atau 'error'
+         */
         function showToast(message, type = 'info') {
             const toastContainer = document.querySelector('.toast-container');
             const toastId = 'toast-' + Date.now();
@@ -662,19 +680,31 @@
             const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
             toast.show();
             
+            // Hapus elemen toast dari DOM setelah animasi selesai
             toastElement.addEventListener('hidden.bs.toast', () => {
                 toastElement.remove();
             });
         }
 
+        // ============================================
+        // FUNGSI INISIALISASI PETA
+        // ============================================
+        
+        /**
+         * Menginisialisasi peta Leaflet dan menambahkan marker restoran
+         * Fungsi ini dipanggil saat halaman pertama kali dimuat
+         */
         function initMap() {
+            // Inisialisasi peta dengan koordinat restoran dan zoom level 15
             map = L.map('map').setView([restoLatLng.lat, restoLatLng.lng], 15);
+            
+            // Menambahkan tile layer dari OpenStreetMap sebagai background peta
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                maxZoom: 19
+                maxZoom: 19  // Maksimal zoom level
             }).addTo(map);
 
-            // Custom icon for restaurant with line indicator
+            // Membuat custom icon untuk marker restoran dengan garis vertikal di bawahnya
             const restoIcon = L.divIcon({
                 className: 'custom-marker',
                 html: `
@@ -689,68 +719,102 @@
                 iconAnchor: [20, 50]
             });
 
+            // Menambahkan marker restoran ke peta dengan popup informasi
             restoMarker = L.marker(restoLatLng, { icon: restoIcon })
                 .addTo(map)
                 .bindPopup("<strong>📍 Restoran</strong><br>Lokasi pengiriman dimulai dari sini");
 
-            // Add click event to map
+            // Menambahkan event listener untuk klik pada peta
+            // Ketika user klik peta, lokasi pelanggan akan diupdate
             map.on('click', function(e) {
                 updateCustomerLocation(e.latlng);
             });
         }
 
+        // ============================================
+        // FUNGSI GEOLOCATION - MENDAPATKAN LOKASI USER
+        // ============================================
+        
+        /**
+         * Menggunakan Geolocation API browser untuk mendapatkan lokasi user saat ini
+         * Fungsi ini dipanggil ketika user klik tombol "Gunakan Lokasi Saya"
+         */
         function setLocationByGeolocation() {
+            // Simpan referensi button dan teks aslinya untuk restore nanti
             const button = event.target;
             const originalText = button.innerHTML;
             
+            // Cek apakah browser mendukung Geolocation API
             if (!navigator.geolocation) {
                 showToast("Geolocation tidak didukung oleh browser Anda.", 'error');
                 return;
             }
 
+            // Disable button dan tampilkan loading spinner
             button.disabled = true;
             button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Mencari lokasi...';
 
+            // Request lokasi user dengan opsi high accuracy
             navigator.geolocation.getCurrentPosition(
+                // Callback sukses: lokasi berhasil didapatkan
                 (position) => {
+                    // Ambil koordinat dari position object
                     const customerLatLng = {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude
                     };
+                    // Update lokasi pelanggan di peta
                     updateCustomerLocation(customerLatLng);
+                    // Restore button ke kondisi semula
                     button.disabled = false;
                     button.innerHTML = originalText;
                     showToast("Lokasi berhasil ditemukan!", 'success');
                 },
+                // Callback error: gagal mendapatkan lokasi
                 (error) => {
+                    // Restore button ke kondisi semula
                     button.disabled = false;
                     button.innerHTML = originalText;
+                    // Tentukan pesan error berdasarkan error code
                     let errorMessage = "Gagal mendapatkan lokasi.";
                     if (error.code === 1) {
+                        // User menolak akses lokasi
                         errorMessage = "Akses lokasi ditolak. Silakan izinkan akses lokasi di pengaturan browser.";
                     } else if (error.code === 2) {
+                        // Lokasi tidak dapat ditentukan
                         errorMessage = "Lokasi tidak dapat ditentukan.";
                     } else if (error.code === 3) {
+                        // Timeout
                         errorMessage = "Waktu permintaan lokasi habis.";
                     }
                     showToast(errorMessage, 'error');
                 },
+                // Opsi untuk geolocation
                 {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
+                    enableHighAccuracy: true,  // Gunakan GPS jika tersedia untuk akurasi lebih tinggi
+                    timeout: 10000,             // Timeout 10 detik
+                    maximumAge: 0               // Jangan gunakan cache, selalu request lokasi baru
                 }
             );
         }
 
+        // ============================================
+        // FUNGSI UPDATE LOKASI PELANGGAN
+        // ============================================
+        
+        /**
+         * Memperbarui lokasi pelanggan di peta dan menghitung rute
+         * @param {Object} latLng - Objek dengan property lat dan lng
+         */
         function updateCustomerLocation(latLng) {
-            // Validate coordinates
+            // Validasi koordinat: pastikan dalam range yang valid
+            // Latitude harus antara -90 sampai 90, Longitude harus antara -180 sampai 180
             if (latLng.lat < -90 || latLng.lat > 90 || latLng.lng < -180 || latLng.lng > 180) {
                 showToast("Koordinat tidak valid.", 'error');
                 return;
             }
 
-            // Custom icon for customer with line indicator
+            // Membuat custom icon untuk marker pelanggan dengan garis vertikal di bawahnya
             const customerIcon = L.divIcon({
                 className: 'custom-marker',
                 html: `
@@ -765,182 +829,290 @@
                 iconAnchor: [20, 50]
             });
 
+            // Jika marker sudah ada, update posisi dan icon
+            // Jika belum ada, buat marker baru
             if (customerMarker) {
                 customerMarker.setLatLng(latLng);
                 customerMarker.setIcon(customerIcon);
             } else {
+                // Buat marker baru untuk pelanggan
                 customerMarker = L.marker(latLng, { icon: customerIcon })
                     .addTo(map)
                     .bindPopup("<strong>📍 Lokasi Anda</strong>");
             }
 
-            // Fit bounds to show both markers
+            // Sesuaikan view peta agar kedua marker (restoran dan pelanggan) terlihat
             const group = new L.featureGroup([restoMarker, customerMarker]);
-            map.fitBounds(group.getBounds().pad(0.1));
+            map.fitBounds(group.getBounds().pad(0.1));  // pad(0.1) menambahkan padding 10% di sekeliling
 
+            // Update nilai input koordinat dengan format 6 desimal
             document.getElementById("customer_coordinates").value = `${latLng.lat.toFixed(6)}, ${latLng.lng.toFixed(6)}`;
+            
+            // Hitung dan tampilkan rute dari restoran ke lokasi pelanggan
             getRoute(restoLatLng, latLng);
         }
 
+        // ============================================
+        // FUNGSI HANDLE INPUT KOORDINAT MANUAL
+        // ============================================
+        
+        /**
+         * Menangani input koordinat manual dari user
+         * Dipanggil ketika user menekan Enter di input koordinat
+         * @param {Event} event - Event object dari keyboard
+         */
         function handleCoordinateInput(event) {
+            // Hanya proses jika user menekan tombol Enter
             if (event.key === 'Enter') {
                 const input = document.getElementById("customer_coordinates");
+                // Parse string koordinat menjadi object {lat, lng}
                 const coords = parseCoordinates(input.value);
                 if (coords) {
+                    // Jika parsing berhasil, update lokasi pelanggan
                     updateCustomerLocation(coords);
                 } else {
+                    // Jika parsing gagal, tampilkan error
                     showToast("Format koordinat tidak valid. Gunakan format: lat, lng", 'error');
                 }
             }
         }
 
+        /**
+         * Mengkonversi string koordinat menjadi object {lat, lng}
+         * Format input: "latitude, longitude" (contoh: "-6.251627, 107.246045")
+         * @param {string} str - String koordinat yang akan di-parse
+         * @returns {Object|null} - Object dengan property lat dan lng, atau null jika invalid
+         */
         function parseCoordinates(str) {
+            // Cek jika string kosong atau null
             if (!str || str.trim() === '') return null;
+            
+            // Split string berdasarkan koma dan convert ke float
             const coords = str.split(',').map(s => parseFloat(s.trim()));
+            
+            // Validasi: harus ada 2 koordinat dan keduanya adalah angka valid
             if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
                 return {
-                    lat: coords[0],
-                    lng: coords[1]
+                    lat: coords[0],  // Latitude
+                    lng: coords[1]   // Longitude
                 };
             }
             return null;
         }
 
+        // ============================================
+        // FUNGSI PERHITUNGAN JARAK
+        // ============================================
+        
+        /**
+         * Menghitung jarak antara dua titik koordinat menggunakan formula Haversine
+         * Formula ini menghitung jarak lingkaran besar (great circle distance) di permukaan bumi
+         * @param {number} lat1 - Latitude titik pertama
+         * @param {number} lon1 - Longitude titik pertama
+         * @param {number} lat2 - Latitude titik kedua
+         * @param {number} lon2 - Longitude titik kedua
+         * @returns {number} - Jarak dalam kilometer
+         */
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Earth's radius in km
+            const R = 6371; // Radius bumi dalam kilometer
+            
+            // Konversi selisih latitude dan longitude ke radian
             const dLat = (lat2 - lat1) * (Math.PI / 180);
             const dLon = (lon2 - lon1) * (Math.PI / 180);
+            
+            // Formula Haversine untuk menghitung jarak
             const a = Math.sin(dLat / 2) ** 2 +
                 Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
                 Math.sin(dLon / 2) ** 2;
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            
+            // Jarak = radius bumi * sudut sentral (c)
             return R * c;
         }
 
+        /**
+         * Menghitung ongkos kirim berdasarkan jarak
+         * @param {number} distance - Jarak dalam kilometer
+         * @returns {number} - Ongkos kirim dalam rupiah
+         */
         function calculateOngkir(distance) {
-            const farePerKm = 500;
+            const farePerKm = 500;  // Tarif per kilometer (Rp 500/km)
+            // Bulatkan jarak ke atas (ceil) untuk menghitung ongkir
             return Math.ceil(distance) * farePerKm;
         }
 
-        // Calculate distance from route coordinates
+        /**
+         * Menghitung total jarak dari array koordinat rute
+         * Menjumlahkan jarak antara setiap titik berurutan dalam rute
+         * @param {Array} coordinates - Array koordinat [[lat, lng], [lat, lng], ...]
+         * @returns {number} - Total jarak dalam kilometer
+         */
         function calculateRouteDistance(coordinates) {
             let totalDistance = 0;
+            // Loop melalui setiap pasangan koordinat berurutan
             for (let i = 0; i < coordinates.length - 1; i++) {
-                const lat1 = coordinates[i][0];
-                const lng1 = coordinates[i][1];
-                const lat2 = coordinates[i + 1][0];
-                const lng2 = coordinates[i + 1][1];
+                const lat1 = coordinates[i][0];      // Latitude titik saat ini
+                const lng1 = coordinates[i][1];      // Longitude titik saat ini
+                const lat2 = coordinates[i + 1][0];  // Latitude titik berikutnya
+                const lng2 = coordinates[i + 1][1];  // Longitude titik berikutnya
+                // Tambahkan jarak antara dua titik ke total
                 totalDistance += calculateDistance(lat1, lng1, lat2, lng2);
             }
             return totalDistance;
         }
 
+        // ============================================
+        // FUNGSI UPDATE INFORMASI JARAK DAN ONGKIR
+        // ============================================
+        
+        /**
+         * Memperbarui tampilan informasi jarak, ongkir, dan tombol WhatsApp
+         * @param {Object} customerLatLng - Koordinat lokasi pelanggan
+         * @param {number} routeDistance - Jarak rute dalam kilometer
+         */
         function updateInfo(customerLatLng, routeDistance) {
             const distance = routeDistance || 0;
             
-            // Format jarak: jika < 1 km, tampilkan dalam meter, jika >= 1 km tampilkan dalam km
+            // Format jarak untuk ditampilkan: jika < 1 km tampilkan dalam meter, jika >= 1 km tampilkan dalam km
             let distanceText = "Menghitung...";
             if (distance > 0) {
                 if (distance < 1) {
-                    // Tampilkan dalam meter
+                    // Jika jarak kurang dari 1 km, konversi ke meter dan bulatkan
                     const distanceInMeters = Math.round(distance * 1000);
                     distanceText = distanceInMeters + " m";
                 } else {
-                    // Tampilkan dalam kilometer
+                    // Jika jarak >= 1 km, tampilkan dengan 2 desimal
                     distanceText = distance.toFixed(2) + " km";
                 }
             }
             
+            // Update tampilan jarak di UI
             document.getElementById("jarak").innerText = distanceText;
 
+            // Validasi jarak maksimal: jika lebih dari 50 km, tampilkan error
             if (distance > 50) {
+                // Jika jarak melebihi 50 km, tampilkan error dan sembunyikan fitur pemesanan
                 showToast("Jarak sangat jauh (>50 km). Kami tidak dapat melakukan delivery order ke lokasi ini.", 'error');
                 document.getElementById("ongkir").innerText = "-";
                 document.getElementById("whatsappButton").style.display = "none";
                 document.getElementById("noteSection").style.display = "none";
-                return;
+                return;  // Keluar dari fungsi, tidak lanjut ke proses berikutnya
             }
 
+            // Jika jarak valid (<= 50 km), lanjutkan proses
             if (distance > 0) {
+                // Hitung ongkir berdasarkan jarak
                 const ongkir = calculateOngkir(distance);
+                // Update tampilan ongkir dengan format rupiah Indonesia
                 document.getElementById("ongkir").innerText = `Rp ${ongkir.toLocaleString("id-ID")}`;
 
-                // Tampilkan section note
+                // Tampilkan section untuk input catatan/note
                 document.getElementById("noteSection").style.display = "block";
 
+                // Tampilkan tombol WhatsApp dan setup event handler
                 const whatsappButton = document.getElementById("whatsappButton");
                 whatsappButton.style.display = "block";
+                
+                // Event handler untuk tombol kirim ke WhatsApp
                 whatsappButton.onclick = () => {
-                    // Format jarak untuk pesan WhatsApp
+                    // Format jarak untuk ditampilkan di pesan WhatsApp
                     let distanceForMessage = "";
                     if (distance < 1) {
+                        // Jika < 1 km, tampilkan dalam meter
                         const distanceInMeters = Math.round(distance * 1000);
                         distanceForMessage = distanceInMeters + " m";
                     } else {
+                        // Jika >= 1 km, tampilkan dalam kilometer dengan 2 desimal
                         distanceForMessage = distance.toFixed(2) + " km";
                     }
                     
-                    // Ambil note/catatan dari input
+                    // Ambil catatan/request khusus dari input textarea
                     const customerNote = document.getElementById("customer_note").value.trim();
                     
-                    // Buat link Google Maps untuk share location
+                    // Buat link Google Maps untuk share location pelanggan
+                    // Link ini akan membuka Google Maps dengan pin di lokasi pelanggan
                     const googleMapsLink = `https://www.google.com/maps?q=${customerLatLng.lat},${customerLatLng.lng}`;
                     
-                    // Buat pesan WhatsApp
+                    // Buat template pesan WhatsApp dengan informasi lengkap
                     let pesanWA = `Halo, saya ingin memesan makanan.\n\n📍 Lokasi Saya:\n${googleMapsLink}\n\nKoordinat:\nLatitude: ${customerLatLng.lat.toFixed(6)}\nLongitude: ${customerLatLng.lng.toFixed(6)}\n\n📏 Jarak: ${distanceForMessage}\n💰 Ongkir: Rp ${ongkir.toLocaleString("id-ID")}`;
                     
-                    // Tambahkan note jika ada
+                    // Tambahkan catatan/request jika user mengisi field note
                     if (customerNote) {
                         pesanWA += `\n\n📝 Catatan / Request:\n${customerNote}`;
                     }
                     
+                    // Tambahkan instruksi untuk membuka Google Maps
                     pesanWA += `\n\nKlik link di atas untuk melihat lokasi di Google Maps.\n\nTerima kasih!`;
                     
+                    // Encode pesan untuk URL dan buka WhatsApp dengan pesan yang sudah disiapkan
                     const linkWA = `https://wa.me/6285157204233?text=${encodeURIComponent(pesanWA)}`;
-                    window.open(linkWA, "_blank");
+                    window.open(linkWA, "_blank");  // Buka di tab baru
                 };
             }
         }
 
-        // Function to decode polyline (supports both standard and polyline6 format)
+        // ============================================
+        // FUNGSI DECODE POLYLINE
+        // ============================================
+        
+        /**
+         * Mendekode encoded polyline string menjadi array koordinat
+         * Polyline adalah format kompresi untuk menyimpan rute jalan
+         * Mendukung format standard (precision 5) dan polyline6 (precision 6)
+         * @param {string} encoded - String polyline yang ter-encode
+         * @param {number} precision - Presisi koordinat (5 untuk standard, 6 untuk polyline6)
+         * @returns {Array} - Array koordinat [[lat, lng], [lat, lng], ...]
+         */
         function decodePolyline(encoded, precision = 5) {
+            // Validasi input: pastikan encoded adalah string yang valid
             if (!encoded || typeof encoded !== 'string') {
                 console.error('Invalid polyline string');
                 return [];
             }
             
-            const poly = [];
-            let index = 0;
-            const len = encoded.length;
-            let lat = 0;
-            let lng = 0;
-            const factor = Math.pow(10, precision);
+            const poly = [];           // Array untuk menyimpan hasil koordinat
+            let index = 0;             // Index untuk iterasi string
+            const len = encoded.length; // Panjang string
+            let lat = 0;                // Akumulator latitude (delta encoding)
+            let lng = 0;                // Akumulator longitude (delta encoding)
+            const factor = Math.pow(10, precision);  // Faktor untuk konversi presisi
 
             try {
+                // Loop melalui setiap karakter dalam encoded string
                 while (index < len) {
                     let b;
                     let shift = 0;
                     let result = 0;
+                    
+                    // Decode latitude (delta encoding)
                     do {
                         if (index >= len) break;
-                        b = encoded.charCodeAt(index++) - 63;
-                        result |= (b & 0x1f) << shift;
+                        b = encoded.charCodeAt(index++) - 63;  // Offset 63 untuk encoding
+                        result |= (b & 0x1f) << shift;        // Ambil 5 bit dan shift
                         shift += 5;
-                    } while (b >= 0x20);
+                    } while (b >= 0x20);  // Lanjut jika bit continuation masih aktif
+                    
+                    // Decode delta latitude (two's complement)
                     const dlat = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
-                    lat += dlat;
+                    lat += dlat;  // Akumulasi delta
 
+                    // Reset untuk decode longitude
                     shift = 0;
                     result = 0;
+                    
+                    // Decode longitude (delta encoding)
                     do {
                         if (index >= len) break;
                         b = encoded.charCodeAt(index++) - 63;
                         result |= (b & 0x1f) << shift;
                         shift += 5;
                     } while (b >= 0x20);
+                    
+                    // Decode delta longitude (two's complement)
                     const dlng = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
-                    lng += dlng;
+                    lng += dlng;  // Akumulasi delta
 
+                    // Konversi ke koordinat aktual dan tambahkan ke array
                     poly.push([lat / factor, lng / factor]);
                 }
             } catch (error) {
@@ -951,93 +1123,115 @@
             return poly;
         }
 
+        // ============================================
+        // FUNGSI MENDAPATKAN RUTE JALAN
+        // ============================================
+        
+        /**
+         * Mendapatkan rute jalan dari restoran ke lokasi pelanggan menggunakan OSRM API
+         * OSRM (Open Source Routing Machine) adalah routing engine untuk menghitung rute jalan
+         * @param {Object} from - Koordinat titik awal {lat, lng}
+         * @param {Object} to - Koordinat titik tujuan {lat, lng}
+         */
         function getRoute(from, to) {
+            // Hapus rute lama jika ada sebelum membuat rute baru
             if (routeLine) {
                 map.removeLayer(routeLine);
             }
 
-            // Store customer location for later use
+            // Simpan lokasi pelanggan untuk digunakan nanti saat update info
             const customerLocation = to;
 
-            // Use overview=full for detailed route and geometries=polyline6 for better precision
+            // Buat URL untuk request rute ke OSRM API
+            // overview=full: dapatkan detail lengkap rute
+            // geometries=polyline6: gunakan format polyline6 untuk presisi lebih tinggi (6 desimal)
+            // steps=true: sertakan informasi step-by-step rute
             const routeUrl = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&alternatives=false&geometries=polyline6&steps=true`;
             
+            // Request rute dari OSRM API
             fetch(routeUrl)
                 .then(response => {
+                    // Cek jika response berhasil
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
                     }
                     return response.json();
                 })
                 .then(data => {
+                    // Cek jika rute berhasil didapatkan
                     if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
                         try {
                             const route = data.routes[0];
-                            const encodedPolyline = route.geometry;
+                            const encodedPolyline = route.geometry;  // Encoded polyline dari OSRM
                             
-                            // Use distance from OSRM response (in meters, convert to km)
-                            // This is more accurate as it uses actual road distance
+                            // Gunakan jarak dari response OSRM (dalam meter, konversi ke km)
+                            // Ini lebih akurat karena menggunakan jarak jalan sebenarnya, bukan jarak lurus
                             const routeDistance = route.distance ? (route.distance / 1000) : 0;
                             
-                            // Decode the polyline (polyline6 uses precision 6)
+                            // Decode polyline dengan precision 6 (polyline6 format)
                             const coordinates = decodePolyline(encodedPolyline, 6);
                             
+                            // Validasi: pastikan decoding berhasil
                             if (!coordinates || coordinates.length === 0) {
                                 throw new Error('Failed to decode polyline');
                             }
                             
-                            // If OSRM distance not available, calculate from coordinates
+                            // Jika jarak dari OSRM tidak tersedia, hitung dari koordinat
                             const calculatedDistance = routeDistance || calculateRouteDistance(coordinates);
                             
-                            // Convert coordinates to LatLng array for Leaflet
+                            // Konversi koordinat ke format LatLng array untuk Leaflet
                             const latlngs = coordinates.map(coord => [coord[0], coord[1]]);
                             
-                            // Create polyline with smooth curve following the road
+                            // Buat polyline (garis rute) dengan styling yang mengikuti lekukan jalan
                             routeLine = L.polyline(latlngs, {
-                                color: "#00e6e6",
-                                weight: 6,
-                                opacity: 0.95,
-                                smoothFactor: 0.5, // Lower value = more detail, follows road curves better
-                                lineCap: 'round',
-                                lineJoin: 'round'
+                                color: "#00e6e6",      // Warna biru cyan
+                                weight: 6,             // Ketebalan garis 6px
+                                opacity: 0.95,        // Opacity 95%
+                                smoothFactor: 0.5,     // Faktor smoothing rendah = lebih detail, mengikuti lekukan jalan lebih baik
+                                lineCap: 'round',     // Ujung garis bulat
+                                lineJoin: 'round'     // Sambungan garis bulat
                             }).addTo(map);
                             
-                            // Bring route line to front so it's visible above other elements
+                            // Bawa garis rute ke depan agar terlihat di atas elemen lain
                             routeLine.bringToFront();
                             
-                            // Update info with route distance
+                            // Update informasi jarak dan ongkir dengan jarak rute yang sebenarnya
                             updateInfo(customerLocation, calculatedDistance);
                         } catch (decodeError) {
                             console.error('Error decoding polyline:', decodeError);
-                            // Fallback to standard polyline
+                            // Jika gagal, lempar error untuk trigger fallback
                             throw decodeError;
                         }
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching route:', error);
-                    // Fallback: try with standard polyline format
+                    // Fallback: coba lagi dengan format polyline standard (precision 5)
                     const fallbackUrl = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&alternatives=false&geometries=polyline`;
                     fetch(fallbackUrl)
                         .then(response => response.json())
                         .then(data => {
+                            // Cek jika rute berhasil didapatkan dari fallback
                             if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
                                 try {
                                     const route = data.routes[0];
                                     const encodedPolyline = route.geometry;
                                     
-                                    // Use distance from OSRM response (in meters, convert to km)
+                                    // Gunakan jarak dari response OSRM (dalam meter, konversi ke km)
                                     const routeDistance = route.distance ? (route.distance / 1000) : 0;
                                     
-                                    const coordinates = decodePolyline(encodedPolyline, 5); // Standard polyline uses precision 5
+                                    // Decode dengan precision 5 (format polyline standard)
+                                    const coordinates = decodePolyline(encodedPolyline, 5);
                                     
+                                    // Validasi decoding
                                     if (!coordinates || coordinates.length === 0) {
                                         throw new Error('Failed to decode polyline');
                                     }
                                     
-                                    // If OSRM distance not available, calculate from coordinates
+                                    // Hitung jarak jika tidak tersedia dari OSRM
                                     const calculatedDistance = routeDistance || calculateRouteDistance(coordinates);
                                     
+                                    // Buat polyline dengan koordinat yang sudah di-decode
                                     const latlngs = coordinates.map(coord => [coord[0], coord[1]]);
                                     routeLine = L.polyline(latlngs, {
                                         color: "#00e6e6",
@@ -1049,23 +1243,32 @@
                                     }).addTo(map);
                                     routeLine.bringToFront();
                                     
-                                    // Update info with route distance
+                                    // Update informasi dengan jarak rute
                                     updateInfo(customerLocation, calculatedDistance);
                                 } catch (decodeError) {
                                     console.error('Error decoding fallback polyline:', decodeError);
+                                    // Tampilkan pesan error ke user
                                     showToast("Gagal memuat rute. Silakan coba lagi.", 'error');
                                 }
                             }
                         })
                         .catch(err => {
+                            // Jika fallback juga gagal, log error
                             console.error('Fallback route fetch also failed:', err);
                         });
                 });
         }
 
-        // Initialize map when page loads
+        // ============================================
+        // INISIALISASI SAAT HALAMAN DIMUAT
+        // ============================================
+        
+        /**
+         * Event listener untuk inisialisasi peta saat halaman selesai dimuat
+         * Dipanggil sekali saat DOM sudah siap
+         */
         window.addEventListener('DOMContentLoaded', () => {
-            initMap();
+            initMap();  // Inisialisasi peta
         });
     </script>
 </body>
