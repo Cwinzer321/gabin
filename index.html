@@ -853,10 +853,11 @@
             
             document.getElementById("jarak").innerText = distanceText;
 
-            if (distance > 15) {
-                showToast("Jarak sangat jauh (>15 km). Kami tidak dapat melakukan delivery order ke lokasi ini.", 'error');
+            if (distance > 50) {
+                showToast("Jarak sangat jauh (>50 km). Kami tidak dapat melakukan delivery order ke lokasi ini.", 'error');
                 document.getElementById("ongkir").innerText = "-";
                 document.getElementById("whatsappButton").style.display = "none";
+                document.getElementById("noteSection").style.display = "none";
                 return;
             }
 
