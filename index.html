@@ -841,7 +841,11 @@
                         distanceForMessage = distance.toFixed(2) + " km";
                     }
                     
-                    const pesanWA = `Halo, saya ingin memesan makanan.\n\n📍 Lokasi Saya:\nLatitude: ${customerLatLng.lat.toFixed(6)}\nLongitude: ${customerLatLng.lng.toFixed(6)}\n\n📏 Jarak: ${distanceForMessage}\n💰 Ongkir: Rp ${ongkir.toLocaleString("id-ID")}\n\nTerima kasih!`;
+                    // Buat link Google Maps untuk share location
+                    const googleMapsLink = `https://www.google.com/maps?q=${customerLatLng.lat},${customerLatLng.lng}`;
+                    
+                    // Pesan WhatsApp dengan link Google Maps
+                    const pesanWA = `Halo, saya ingin memesan makanan.\n\n📍 Lokasi Saya:\n${googleMapsLink}\n\nKoordinat:\nLatitude: ${customerLatLng.lat.toFixed(6)}\nLongitude: ${customerLatLng.lng.toFixed(6)}\n\n📏 Jarak: ${distanceForMessage}\n💰 Ongkir: Rp ${ongkir.toLocaleString("id-ID")}\n\nKlik link di atas untuk melihat lokasi di Google Maps.\n\nTerima kasih!`;
                     const linkWA = `https://wa.me/6285157204233?text=${encodeURIComponent(pesanWA)}`;
                     window.open(linkWA, "_blank");
                 };
