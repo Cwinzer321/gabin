@@ -4,104 +4,602 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delivery Order dengan Peta</title>
+    <meta name="description" content="Sistem Order Delivery dengan Peta - Hitung ongkir otomatis, tentukan lokasi pelanggan, dan kirim pesanan via WhatsApp dengan mudah.">
+    <meta name="keywords" content="order delivery, peta, ongkir otomatis, integrasi WhatsApp, delivery order">
+    <meta name="author" content="Order Delivery Team">
+    <title>Delivery Order dengan Peta | Sistem Pemesanan Online</title>
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #121212;
-            color: #eaeaea;
+        :root {
+            --primary-color: #00e6e6;
+            --primary-hover: #00b3b3;
+            --success-color: #4caf50;
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --bg-input: #2a2a2a;
+            --text-primary: #eaeaea;
+            --text-secondary: #b0b0b0;
         }
 
-        .container {
-            margin-top: 30px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.3rem;
+            color: var(--primary-color) !important;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-brand i {
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            color: var(--text-primary) !important;
+            font-weight: 400;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem !important;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem 0;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, rgba(0, 230, 230, 0.1) 0%, rgba(0, 179, 179, 0.05) 100%);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            margin-bottom: 3rem;
+            text-align: center;
+            border: 1px solid rgba(0, 230, 230, 0.2);
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #00b3b3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 0;
+            font-size: 1.2rem;
+            line-height: 1.8;
+        }
+
+        /* Features Section */
+        .features-section {
+            margin: 4rem 0;
+        }
+
+        .feature-card {
+            background-color: var(--bg-card);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 230, 230, 0.2);
+            border-color: rgba(0, 230, 230, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
 
         .input-box {
-            background-color: #333;
-            color: #eaeaea;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
+            background-color: var(--bg-input);
+            color: var(--text-primary);
+            border: 2px solid transparent;
+            padding: 12px 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .input-box:focus {
+            background-color: var(--bg-input);
+            color: var(--text-primary);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0, 230, 230, 0.25);
+            outline: none;
+        }
+
+        .input-box::placeholder {
+            color: var(--text-secondary);
         }
 
         .card {
-            background-color: #1e1e1e;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            background-color: var(--bg-card);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 230, 230, 0.2);
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
         }
 
         .btn-primary {
-            background-color: #00e6e6;
-            border: none;
-            transition: all 0.3s ease;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            color: #ffffff;
         }
 
         .btn-primary:hover {
-            background-color: #00b3b3;
+            background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 230, 230, 0.4);
         }
 
         .btn-success {
-            background-color: #4caf50;
-            border: none;
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: #ffffff;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #45a049 0%, #4caf50 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn i {
+            margin-right: 0.5rem;
         }
 
         #map {
             width: 100%;
-            height: 400px;
+            height: 500px;
+            border-radius: 20px;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, rgba(0, 230, 230, 0.1) 0%, rgba(0, 179, 179, 0.1) 100%);
             border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border: 1px solid rgba(0, 230, 230, 0.2);
         }
 
-        /* Tombol yang ada di bagian atas halaman */
-        .btn-tentang {
-            margin: 20px;
-            font-size: 1rem;
-            padding: 10px 20px;
-            background-color: #00e6e6;
-            color: #FFFFFF;
-            border: none;
-            transition: all 0.3s ease;
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .btn-tentang:hover {
-            background-color: #00b3b3;
-            transform: scale(1.05);
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-value {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        /* Loading Spinner */
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+        }
+
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1050;
+        }
+
+        .toast {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--bg-card);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .footer-content a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-content a:hover {
+            color: var(--primary-hover);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2rem;
+            }
+
+            #map {
+                height: 350px;
+            }
+
+            .hero-section {
+                padding: 2rem 1.5rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .page-subtitle {
+                font-size: 1rem;
+            }
+
+            .features-section {
+                margin: 2rem 0;
+            }
+
+            .card-body {
+                padding: 1.5rem;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* Section Divider */
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+            margin: 3rem 0;
+        }
+
+        /* Badge */
+        .badge-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        /* Map Container */
+        .map-container {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .map-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(30, 30, 30, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            z-index: 1000;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            border: 1px solid rgba(0, 230, 230, 0.2);
+        }
+
+        .map-overlay i {
+            color: var(--primary-color);
+            margin-right: 0.5rem;
         }
     </style>
 </head>
 
 <body>
-    <!-- Tombol ke halaman Tentang -->
-    <button class="btn btn-tentang" onclick="window.location.href='tentang.html'">
-        Tentang Order Delivery dengan Peta
-    </button>
-
-    <div class="container text-center">
-        <h1 class="mb-4">Order Delivery dengan Peta</h1>
-        <div class="row">
-            <div class="col-md-8">
-                <div id="map"></div>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Delivery Order</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">
+                            <i class="fas fa-home"></i> Beranda
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="tentang.html">
+                            <i class="fas fa-info-circle"></i> Tentang
+                        </a>
+                    </li>
+                </ul>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Masukkan Koordinat Kamu</h5>
-                        <input type="text" class="form-control mb-3 input-box" id="customer_coordinates" placeholder="Contoh: -6.251627, 107.246045">
-                        <button class="btn btn-primary w-100 mb-3" onclick="setLocationByGeolocation()">Gunakan Lokasi Saya</button>
-                        <div class="mt-3">
-                            <p><strong>Jarak:</strong> <span id="jarak">-</span> km</p>
-                            <p><strong>Ongkir:</strong> <span id="ongkir">-</span></p>
+        </div>
+    </nav>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Hero Section -->
+            <div class="hero-section fade-in">
+                <span class="badge-custom">
+                    <i class="fas fa-star"></i> Sistem Profesional
+                </span>
+                <h1 class="page-title">Order Delivery dengan Peta</h1>
+                <p class="page-subtitle">
+                    Solusi lengkap untuk pemesanan online dengan perhitungan ongkir otomatis, 
+                    integrasi peta interaktif, dan pengiriman pesanan via WhatsApp
+                </p>
+            </div>
+
+            <!-- Map Section -->
+            <div class="row fade-in">
+                <div class="col-lg-8 mb-4">
+                    <div class="map-container">
+                        <div class="map-overlay">
+                            <i class="fas fa-info-circle"></i>
+                            Klik pada peta untuk menentukan lokasi pengiriman
                         </div>
-                        <button id="whatsappButton" class="btn btn-success w-100" style="display: none;">Kirim ke WhatsApp</button>
+                        <div id="map"></div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-map-pin"></i>
+                                Masukkan Koordinat
+                            </h5>
+                            <input type="text" 
+                                   class="form-control mb-3 input-box" 
+                                   id="customer_coordinates" 
+                                   placeholder="Contoh: -6.251627, 107.246045"
+                                   onkeypress="handleCoordinateInput(event)">
+                            <button class="btn btn-primary w-100 mb-3" onclick="setLocationByGeolocation()">
+                                <i class="fas fa-location-arrow"></i>
+                                Gunakan Lokasi Saya
+                            </button>
+                            
+                            <div class="info-box">
+                                <div class="info-item">
+                                    <span class="info-label">
+                                        <i class="fas fa-route"></i>
+                                        Jarak
+                                    </span>
+                                    <span class="info-value" id="jarak">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                        Ongkir
+                                    </span>
+                                    <span class="info-value" id="ongkir">-</span>
+                                </div>
+                            </div>
+                            
+                            <button id="whatsappButton" class="btn btn-success w-100 mt-3" style="display: none;">
+                                <i class="fab fa-whatsapp"></i>
+                                Kirim ke WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Features Section -->
+            <div class="features-section fade-in">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-map-marked-alt"></i>
+                            </div>
+                            <h3 class="feature-title">Lokasi Akurat</h3>
+                            <p class="feature-description">
+                                Tentukan lokasi dengan mudah menggunakan peta interaktif atau koordinat GPS
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <h3 class="feature-title">Ongkir Otomatis</h3>
+                            <p class="feature-description">
+                                Perhitungan ongkos kirim yang akurat berdasarkan jarak real-time
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fab fa-whatsapp"></i>
+                            </div>
+                            <h3 class="feature-title">Integrasi WhatsApp</h3>
+                            <p class="feature-description">
+                                Kirim pesanan langsung ke WhatsApp dengan informasi lengkap
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <h5 style="color: var(--primary-color); margin-bottom: 1rem;">
+                        <i class="fas fa-map-marker-alt"></i> Delivery Order
+                    </h5>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Sistem pemesanan online profesional dengan integrasi peta dan perhitungan ongkir otomatis.
+                    </p>
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <h5 style="color: var(--primary-color); margin-bottom: 1rem;">Tautan Cepat</h5>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 0.5rem;">
+                            <a href="index.html" style="color: var(--text-secondary); text-decoration: none; transition: color 0.3s;">
+                                <i class="fas fa-home" style="margin-right: 0.5rem;"></i> Beranda
+                            </a>
+                        </li>
+                        <li style="margin-bottom: 0.5rem;">
+                            <a href="tentang.html" style="color: var(--text-secondary); text-decoration: none; transition: color 0.3s;">
+                                <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i> Tentang Kami
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 style="color: var(--primary-color); margin-bottom: 1rem;">Kontak</h5>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        <i class="fab fa-whatsapp" style="color: var(--success-color); margin-right: 0.5rem;"></i>
+                        WhatsApp: +62 851-5720-4233
+                    </p>
+                </div>
+            </div>
+            <div class="section-divider" style="margin: 2rem 0 1rem;"></div>
+            <div class="footer-content">
+                <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
+                    &copy; 2024 Delivery Order dengan Peta. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
+
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let map, restoMarker, customerMarker, routeLine;
         const restoLatLng = {
@@ -109,20 +607,74 @@
             lng: 107.246045
         };
 
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
+            const bgColor = type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info';
+            
+            const toastHTML = `
+                <div id="${toastId}" class="toast align-items-center text-white bg-${bgColor} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+            toast.show();
+            
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+
         function initMap() {
             map = L.map('map').setView([restoLatLng.lat, restoLatLng.lng], 15);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
             }).addTo(map);
 
-            restoMarker = L.marker(restoLatLng).addTo(map).bindPopup("Restoran");
+            // Custom icon for restaurant with line indicator
+            const restoIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `
+                    <div style="position: relative; width: 40px; height: 50px;">
+                        <div style="background-color: #00e6e6; width: 35px; height: 35px; border-radius: 50%; border: 4px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 2;">
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 16px;">📍</div>
+                        </div>
+                        <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 3px; height: 20px; background: linear-gradient(180deg, #00e6e6 0%, rgba(0, 230, 230, 0.3) 100%); border-radius: 2px; z-index: 1;"></div>
+                    </div>
+                `,
+                iconSize: [40, 50],
+                iconAnchor: [20, 50]
+            });
+
+            restoMarker = L.marker(restoLatLng, { icon: restoIcon })
+                .addTo(map)
+                .bindPopup("<strong>📍 Restoran</strong><br>Lokasi pengiriman dimulai dari sini");
+
+            // Add click event to map
+            map.on('click', function(e) {
+                updateCustomerLocation(e.latlng);
+            });
         }
 
         function setLocationByGeolocation() {
+            const button = event.target;
+            const originalText = button.innerHTML;
+            
             if (!navigator.geolocation) {
-                alert("Geolocation tidak didukung oleh browser Anda.");
+                showToast("Geolocation tidak didukung oleh browser Anda.", 'error');
                 return;
             }
+
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Mencari lokasi...';
 
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -131,27 +683,84 @@
                         lng: position.coords.longitude
                     };
                     updateCustomerLocation(customerLatLng);
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                    showToast("Lokasi berhasil ditemukan!", 'success');
                 },
                 (error) => {
-                    alert("Gagal mendapatkan lokasi: " + error.message);
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                    let errorMessage = "Gagal mendapatkan lokasi.";
+                    if (error.code === 1) {
+                        errorMessage = "Akses lokasi ditolak. Silakan izinkan akses lokasi di pengaturan browser.";
+                    } else if (error.code === 2) {
+                        errorMessage = "Lokasi tidak dapat ditentukan.";
+                    } else if (error.code === 3) {
+                        errorMessage = "Waktu permintaan lokasi habis.";
+                    }
+                    showToast(errorMessage, 'error');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
                 }
             );
         }
 
         function updateCustomerLocation(latLng) {
-            if (customerMarker) {
-                customerMarker.setLatLng(latLng);
-            } else {
-                customerMarker = L.marker(latLng).addTo(map).bindPopup("Pelanggan");
+            // Validate coordinates
+            if (latLng.lat < -90 || latLng.lat > 90 || latLng.lng < -180 || latLng.lng > 180) {
+                showToast("Koordinat tidak valid.", 'error');
+                return;
             }
 
-            map.setView(latLng, 15);
-            document.getElementById("customer_coordinates").value = `${latLng.lat}, ${latLng.lng}`;
-            updateInfo(latLng);
+            // Custom icon for customer with line indicator
+            const customerIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `
+                    <div style="position: relative; width: 40px; height: 50px;">
+                        <div style="background-color: #4caf50; width: 35px; height: 35px; border-radius: 50%; border: 4px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 2;">
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 16px;">📍</div>
+                        </div>
+                        <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 3px; height: 20px; background: linear-gradient(180deg, #4caf50 0%, rgba(76, 175, 80, 0.3) 100%); border-radius: 2px; z-index: 1;"></div>
+                    </div>
+                `,
+                iconSize: [40, 50],
+                iconAnchor: [20, 50]
+            });
+
+            if (customerMarker) {
+                customerMarker.setLatLng(latLng);
+                customerMarker.setIcon(customerIcon);
+            } else {
+                customerMarker = L.marker(latLng, { icon: customerIcon })
+                    .addTo(map)
+                    .bindPopup("<strong>📍 Lokasi Anda</strong>");
+            }
+
+            // Fit bounds to show both markers
+            const group = new L.featureGroup([restoMarker, customerMarker]);
+            map.fitBounds(group.getBounds().pad(0.1));
+
+            document.getElementById("customer_coordinates").value = `${latLng.lat.toFixed(6)}, ${latLng.lng.toFixed(6)}`;
             getRoute(restoLatLng, latLng);
         }
 
+        function handleCoordinateInput(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById("customer_coordinates");
+                const coords = parseCoordinates(input.value);
+                if (coords) {
+                    updateCustomerLocation(coords);
+                } else {
+                    showToast("Format koordinat tidak valid. Gunakan format: lat, lng", 'error');
+                }
+            }
+        }
+
         function parseCoordinates(str) {
+            if (!str || str.trim() === '') return null;
             const coords = str.split(',').map(s => parseFloat(s.trim()));
             if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
                 return {
@@ -163,7 +772,7 @@
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
+            const R = 6371; // Earth's radius in km
             const dLat = (lat2 - lat1) * (Math.PI / 180);
             const dLon = (lon2 - lon1) * (Math.PI / 180);
             const a = Math.sin(dLat / 2) ** 2 +
@@ -178,30 +787,114 @@
             return Math.ceil(distance) * farePerKm;
         }
 
-        function updateInfo(customerLatLng) {
-            const distance = calculateDistance(
-                restoLatLng.lat, restoLatLng.lng,
-                customerLatLng.lat, customerLatLng.lng
-            );
-            document.getElementById("jarak").innerText = distance.toFixed(2);
+        // Calculate distance from route coordinates
+        function calculateRouteDistance(coordinates) {
+            let totalDistance = 0;
+            for (let i = 0; i < coordinates.length - 1; i++) {
+                const lat1 = coordinates[i][0];
+                const lng1 = coordinates[i][1];
+                const lat2 = coordinates[i + 1][0];
+                const lng2 = coordinates[i + 1][1];
+                totalDistance += calculateDistance(lat1, lng1, lat2, lng2);
+            }
+            return totalDistance;
+        }
+
+        function updateInfo(customerLatLng, routeDistance) {
+            const distance = routeDistance || 0;
+            
+            // Format jarak: jika < 1 km, tampilkan dalam meter, jika >= 1 km tampilkan dalam km
+            let distanceText = "Menghitung...";
+            if (distance > 0) {
+                if (distance < 1) {
+                    // Tampilkan dalam meter
+                    const distanceInMeters = Math.round(distance * 1000);
+                    distanceText = distanceInMeters + " m";
+                } else {
+                    // Tampilkan dalam kilometer
+                    distanceText = distance.toFixed(2) + " km";
+                }
+            }
+            
+            document.getElementById("jarak").innerText = distanceText;
 
             if (distance > 15) {
-                alert("Jarak sangat jauh, kami tidak dapat melakukan delivery order ke lokasi ini.");
+                showToast("Jarak sangat jauh (>15 km). Kami tidak dapat melakukan delivery order ke lokasi ini.", 'error');
                 document.getElementById("ongkir").innerText = "-";
                 document.getElementById("whatsappButton").style.display = "none";
                 return;
             }
 
-            const ongkir = calculateOngkir(distance);
-            document.getElementById("ongkir").innerText = `Rp${ongkir.toLocaleString("id-ID")}`;
+            if (distance > 0) {
+                const ongkir = calculateOngkir(distance);
+                document.getElementById("ongkir").innerText = `Rp ${ongkir.toLocaleString("id-ID")}`;
 
-            const whatsappButton = document.getElementById("whatsappButton");
-            whatsappButton.style.display = "block";
-            whatsappButton.onclick = () => {
-                const pesanWA = `Halo, saya ingin memesan makanan. Lokasi saya: Lat: ${customerLatLng.lat}, Lng: ${customerLatLng.lng}. Jarak: ${distance.toFixed(2)} km. Ongkir: Rp${ongkir.toLocaleString("id-ID")}.`;
-                const linkWA = `https://wa.me/6285157204233?text=${encodeURIComponent(pesanWA)}`;
-                window.open(linkWA, "_blank");
-            };
+                const whatsappButton = document.getElementById("whatsappButton");
+                whatsappButton.style.display = "block";
+                whatsappButton.onclick = () => {
+                    // Format jarak untuk pesan WhatsApp
+                    let distanceForMessage = "";
+                    if (distance < 1) {
+                        const distanceInMeters = Math.round(distance * 1000);
+                        distanceForMessage = distanceInMeters + " m";
+                    } else {
+                        distanceForMessage = distance.toFixed(2) + " km";
+                    }
+                    
+                    const pesanWA = `Halo, saya ingin memesan makanan.\n\n📍 Lokasi Saya:\nLatitude: ${customerLatLng.lat.toFixed(6)}\nLongitude: ${customerLatLng.lng.toFixed(6)}\n\n📏 Jarak: ${distanceForMessage}\n💰 Ongkir: Rp ${ongkir.toLocaleString("id-ID")}\n\nTerima kasih!`;
+                    const linkWA = `https://wa.me/6285157204233?text=${encodeURIComponent(pesanWA)}`;
+                    window.open(linkWA, "_blank");
+                };
+            }
+        }
+
+        // Function to decode polyline (supports both standard and polyline6 format)
+        function decodePolyline(encoded, precision = 5) {
+            if (!encoded || typeof encoded !== 'string') {
+                console.error('Invalid polyline string');
+                return [];
+            }
+            
+            const poly = [];
+            let index = 0;
+            const len = encoded.length;
+            let lat = 0;
+            let lng = 0;
+            const factor = Math.pow(10, precision);
+
+            try {
+                while (index < len) {
+                    let b;
+                    let shift = 0;
+                    let result = 0;
+                    do {
+                        if (index >= len) break;
+                        b = encoded.charCodeAt(index++) - 63;
+                        result |= (b & 0x1f) << shift;
+                        shift += 5;
+                    } while (b >= 0x20);
+                    const dlat = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
+                    lat += dlat;
+
+                    shift = 0;
+                    result = 0;
+                    do {
+                        if (index >= len) break;
+                        b = encoded.charCodeAt(index++) - 63;
+                        result |= (b & 0x1f) << shift;
+                        shift += 5;
+                    } while (b >= 0x20);
+                    const dlng = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
+                    lng += dlng;
+
+                    poly.push([lat / factor, lng / factor]);
+                }
+            } catch (error) {
+                console.error('Error decoding polyline:', error);
+                return [];
+            }
+            
+            return poly;
         }
 
         function getRoute(from, to) {
@@ -209,18 +902,117 @@
                 map.removeLayer(routeLine);
             }
 
-            const routeUrl = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=false&alternatives=false&geometries=polyline`;
+            // Store customer location for later use
+            const customerLocation = to;
+
+            // Use overview=full for detailed route and geometries=polyline6 for better precision
+            const routeUrl = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&alternatives=false&geometries=polyline6&steps=true`;
+            
             fetch(routeUrl)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    const route = data.routes[0].geometry;
-                    routeLine = L.polyline(L.Polyline.fromEncoded(route).getLatLngs(), {
-                        color: "blue",
-                        weight: 5
-                    }).addTo(map);
+                    if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                        try {
+                            const route = data.routes[0];
+                            const encodedPolyline = route.geometry;
+                            
+                            // Use distance from OSRM response (in meters, convert to km)
+                            // This is more accurate as it uses actual road distance
+                            const routeDistance = route.distance ? (route.distance / 1000) : 0;
+                            
+                            // Decode the polyline (polyline6 uses precision 6)
+                            const coordinates = decodePolyline(encodedPolyline, 6);
+                            
+                            if (!coordinates || coordinates.length === 0) {
+                                throw new Error('Failed to decode polyline');
+                            }
+                            
+                            // If OSRM distance not available, calculate from coordinates
+                            const calculatedDistance = routeDistance || calculateRouteDistance(coordinates);
+                            
+                            // Convert coordinates to LatLng array for Leaflet
+                            const latlngs = coordinates.map(coord => [coord[0], coord[1]]);
+                            
+                            // Create polyline with smooth curve following the road
+                            routeLine = L.polyline(latlngs, {
+                                color: "#00e6e6",
+                                weight: 6,
+                                opacity: 0.95,
+                                smoothFactor: 0.5, // Lower value = more detail, follows road curves better
+                                lineCap: 'round',
+                                lineJoin: 'round'
+                            }).addTo(map);
+                            
+                            // Bring route line to front so it's visible above other elements
+                            routeLine.bringToFront();
+                            
+                            // Update info with route distance
+                            updateInfo(customerLocation, calculatedDistance);
+                        } catch (decodeError) {
+                            console.error('Error decoding polyline:', decodeError);
+                            // Fallback to standard polyline
+                            throw decodeError;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching route:', error);
+                    // Fallback: try with standard polyline format
+                    const fallbackUrl = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&alternatives=false&geometries=polyline`;
+                    fetch(fallbackUrl)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                                try {
+                                    const route = data.routes[0];
+                                    const encodedPolyline = route.geometry;
+                                    
+                                    // Use distance from OSRM response (in meters, convert to km)
+                                    const routeDistance = route.distance ? (route.distance / 1000) : 0;
+                                    
+                                    const coordinates = decodePolyline(encodedPolyline, 5); // Standard polyline uses precision 5
+                                    
+                                    if (!coordinates || coordinates.length === 0) {
+                                        throw new Error('Failed to decode polyline');
+                                    }
+                                    
+                                    // If OSRM distance not available, calculate from coordinates
+                                    const calculatedDistance = routeDistance || calculateRouteDistance(coordinates);
+                                    
+                                    const latlngs = coordinates.map(coord => [coord[0], coord[1]]);
+                                    routeLine = L.polyline(latlngs, {
+                                        color: "#00e6e6",
+                                        weight: 6,
+                                        opacity: 0.95,
+                                        smoothFactor: 0.5,
+                                        lineCap: 'round',
+                                        lineJoin: 'round'
+                                    }).addTo(map);
+                                    routeLine.bringToFront();
+                                    
+                                    // Update info with route distance
+                                    updateInfo(customerLocation, calculatedDistance);
+                                } catch (decodeError) {
+                                    console.error('Error decoding fallback polyline:', decodeError);
+                                    showToast("Gagal memuat rute. Silakan coba lagi.", 'error');
+                                }
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Fallback route fetch also failed:', err);
+                        });
                 });
         }
-        window.onload = initMap;
+
+        // Initialize map when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            initMap();
+        });
     </script>
 </body>
 

@@ -4,184 +4,592 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tentang Order Delivery dengan Peta</title>
-
     <meta name="description"
         content="Sistem Order Delivery dengan Peta yang memudahkan pemesanan, perhitungan ongkir, dan pengiriman dengan integrasi peta dan WhatsApp.">
     <meta name="keywords" content="order delivery, peta, ongkir otomatis, integrasi WhatsApp, Google Maps">
     <meta name="author" content="Order Delivery Team">
+    <title>Tentang Order Delivery dengan Peta | Sistem Pemesanan Online</title>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-    <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/svgs/solid/map-marker-alt.svg"
-        type="image/svg+xml">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --primary-color: #00e6e6;
+            --primary-hover: #00b3b3;
+            --success-color: #4caf50;
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --bg-input: #2a2a2a;
+            --text-primary: #eaeaea;
+            --text-secondary: #b0b0b0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #121212;
-            color: #eaeaea;
-            padding-top: 30px;
-            padding-bottom: 80px;
+            background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .container {
-            margin-top: 30px;
+        /* Navbar */
+        .navbar {
+            background-color: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            padding: 1rem 0;
         }
 
-        h1 {
-            color: #00e6e6;
-            font-size: 2rem;
+        .navbar-brand {
             font-weight: 600;
-            margin-bottom: 30px;
+            font-size: 1.3rem;
+            color: var(--primary-color) !important;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-brand i {
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            color: var(--text-primary) !important;
+            font-weight: 400;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem !important;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .nav-link.active {
+            color: var(--primary-color) !important;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem 0;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, rgba(0, 230, 230, 0.1) 0%, rgba(0, 179, 179, 0.05) 100%);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            margin-bottom: 3rem;
+            text-align: center;
+            border: 1px solid rgba(0, 230, 230, 0.2);
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #00b3b3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 0;
+            font-size: 1.2rem;
+            line-height: 1.8;
+        }
+
+        .badge-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: var(--bg-card);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 2rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 230, 230, 0.2);
+        }
+
+        .card-body {
+            padding: 2.5rem;
         }
 
         .section-title {
             font-weight: 600;
-            font-size: 1.5rem;
-            margin-top: 20px;
-            color: #00e6e6;
+            font-size: 1.8rem;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
-        p {
+        .section-title i {
+            font-size: 1.5rem;
+        }
+
+        .section-content {
+            color: var(--text-secondary);
             font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-content strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* List Styles */
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .feature-list li {
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li i {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin-top: 0.25rem;
+            flex-shrink: 0;
+        }
+
+        .feature-list li strong {
+            color: var(--text-primary);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-list li span {
+            color: var(--text-secondary);
             line-height: 1.6;
         }
 
-        .card {
-            background-color: #1e1e1e;
+        /* Steps Section */
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .step-card {
+            background: linear-gradient(135deg, rgba(0, 230, 230, 0.1) 0%, rgba(0, 179, 179, 0.05) 100%);
             border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            animation: fade-in 1.5s ease;
-        }
-
-        .card-body {
-            padding: 30px;
-        }
-
-        .btn-primary {
-            background-color: #00e6e6;
-            border: none;
+            padding: 1.5rem;
+            border: 1px solid rgba(0, 230, 230, 0.2);
+            text-align: center;
             transition: all 0.3s ease;
         }
 
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 230, 230, 0.2);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+        }
+
+        .step-text {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Button */
+        .btn {
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            color: #ffffff;
+        }
+
         .btn-primary:hover {
-            background-color: #00b3b3;
-            transform: scale(1.05);
+            background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 230, 230, 0.4);
         }
 
-        .btn-fixed {
-            position: fixed;
-            bottom: 30px;
-            z-index: 1000;
-            font-size: 1.2rem;
-            padding: 10px 20px;
+        .btn i {
+            margin-right: 0.5rem;
         }
 
-        @keyframes fade-in {
+        /* Footer */
+        .footer {
+            background-color: var(--bg-card);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .footer-content a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-content a:hover {
+            color: var(--primary-hover);
+        }
+
+        /* Section Divider */
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+            margin: 3rem 0;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
             from {
                 opacity: 0;
                 transform: translateY(20px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
 
-        @media (max-width: 576px) {
-            .btn-fixed {
-                font-size: 0.9rem;
-                padding: 8px 15px;
-                bottom: 20px;
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .hero-section {
+                padding: 2rem 1.5rem;
+            }
+
+            .page-subtitle {
+                font-size: 1rem;
+            }
+
+            .card-body {
+                padding: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .steps-container {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 
 <body>
-
-    <div class="container">
-        <h1 class="text-center">Tentang Order Delivery dengan Peta</h1>
-
-        <div class="card">
-            <div class="card-body">
-                <h2 class="section-title">Apa itu Order Delivery dengan Peta?</h2>
-                <p>
-                    Order Delivery dengan Peta adalah sistem yang sangat bermanfaat bagi pedagang kelas menengah ke
-                    bawah,
-                    karena memungkinkan mereka untuk melayani pelanggan lebih efisien dan memperluas jangkauan pasar.
-                    Fitur yang sangat berguna adalah:
-                    <br>
-                    <strong>Antarmuka yang Mudah Digunakan dan Terjangkau:</strong> Sistem ini dirancang dengan
-                    antarmuka yang
-                    sederhana, memungkinkan pedagang untuk dengan mudah mengelola pesanan tanpa memerlukan keterampilan
-                    teknis. Dengan biaya yang terjangkau atau berbasis komisi, pedagang dapat menggunakan teknologi ini
-                    untuk
-                    menghitung ongkos kirim dan menjangkau lebih banyak pelanggan, meningkatkan efisiensi operasional
-                    tanpa
-                    perlu investasi besar.
-                </p>
-
-                <h2 class="section-title">Fitur Utama</h2>
-                <ul>
-                    <li><strong>Menentukan Lokasi Pelanggan:</strong> Pelanggan dapat memilih lokasi mereka langsung
-                        dari peta
-                        atau memasukkan koordinat untuk menentukan tempat pengantaran.</li>
-                    <li><strong>Perhitungan Jarak:</strong> Sistem secara otomatis menghitung jarak antara restoran/toko
-                        dan
-                        lokasi pelanggan menggunakan teknologi GPS yang akurat.</li>
-                    <li><strong>Perhitungan Ongkir:</strong> Berdasarkan jarak yang dihitung, sistem menghitung ongkos
-                        kirim
-                        secara otomatis yang harus dibayar oleh pelanggan.</li>
-                    <li><strong>Integrasi WhatsApp:</strong> Setelah pemesanan, pelanggan dapat langsung mengirimkan
-                        informasi
-                        pesanan mereka ke restoran atau toko melalui WhatsApp untuk konfirmasi lebih lanjut.</li>
-                    <li><strong>Integrasi Google Maps:</strong> Pelanggan dapat membuka Google Maps untuk melihat rute
-                        atau
-                        menyalin koordinat mereka. <a href="https://maps.google.com" target="_blank"
-                            class="text-info">Lihat
-                            di Peta</a></li>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Delivery Order</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-home"></i> Beranda
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="tentang.html">
+                            <i class="fas fa-info-circle"></i> Tentang
+                        </a>
+                    </li>
                 </ul>
+            </div>
+        </div>
+    </nav>
 
-                <h2 class="section-title">Manfaat</h2>
-                <p>
-                    Menggunakan sistem ini memberikan keuntungan bagi pelanggan dan penyedia layanan, antara lain:
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Hero Section -->
+            <div class="hero-section fade-in">
+                <span class="badge-custom">
+                    <i class="fas fa-info-circle"></i> Informasi Sistem
+                </span>
+                <h1 class="page-title">Tentang Order Delivery dengan Peta</h1>
+                <p class="page-subtitle">
+                    Pelajari lebih lanjut tentang sistem pemesanan online profesional dengan integrasi peta interaktif 
+                    dan perhitungan ongkir otomatis
                 </p>
-                <ul>
-                    <li><strong>Mudah dan Cepat:</strong> Pelanggan dapat memilih lokasi dan melakukan pemesanan tanpa
-                        kesulitan mencari alamat.</li>
-                    <li><strong>Akurasi Pengiriman:</strong> Sistem ini memastikan perhitungan jarak dan ongkos kirim
-                        yang
-                        lebih akurat dan efisien, sehingga pengiriman tepat waktu.</li>
-                    <li><strong>Kenyamanan:</strong> Pelanggan dapat mengirimkan informasi pesanan langsung melalui
-                        WhatsApp,
-                        meminimalkan kesalahan komunikasi.</li>
-                    <li><strong>Fleksibilitas:</strong> Pelanggan dapat memilih berbagai metode komunikasi dan cara
-                        pengiriman
-                        informasi, baik melalui peta atau koordinat manual.</li>
-                </ul>
+            </div>
 
-                <h2 class="section-title">Bagaimana Cara Kerjanya?</h2>
-                <p>
-                 1. Sistem menghitung jarak antara lokasi pelanggan dan restoran atau toko.
-                    <br> 2. Ongkos kirim dihitung berdasarkan jarak dan ditampilkan kepada pelanggan.
-                    <br> 3. Pelanggan dapat mengirimkan informasi pesanan mereka ke restoran via WhatsApp untuk
-                    konfirmasi.
-                    <br> 4. Google Maps akan terbuka untuk melihat rute.
-                </p>
+            <!-- Overview Section -->
+            <div class="card fade-in">
+                <div class="card-body">
+                    <h2 class="section-title">
+                        <i class="fas fa-question-circle"></i>
+                        Apa itu Order Delivery dengan Peta?
+                    </h2>
+                    <p class="section-content">
+                        Order Delivery dengan Peta adalah sistem yang sangat bermanfaat bagi pedagang kelas menengah ke bawah,
+                        karena memungkinkan mereka untuk melayani pelanggan lebih efisien dan memperluas jangkauan pasar.
+                    </p>
+                    <div class="card" style="background: linear-gradient(135deg, rgba(0, 230, 230, 0.1) 0%, rgba(0, 179, 179, 0.05) 100%); border: 1px solid rgba(0, 230, 230, 0.2); margin-top: 1.5rem;">
+                        <div class="card-body">
+                            <p class="section-content" style="margin-bottom: 0;">
+                                <strong>Antarmuka yang Mudah Digunakan dan Terjangkau:</strong> Sistem ini dirancang dengan
+                                antarmuka yang sederhana, memungkinkan pedagang untuk dengan mudah mengelola pesanan tanpa memerlukan keterampilan
+                                teknis. Dengan biaya yang terjangkau atau berbasis komisi, pedagang dapat menggunakan teknologi ini
+                                untuk menghitung ongkos kirim dan menjangkau lebih banyak pelanggan, meningkatkan efisiensi operasional
+                                tanpa perlu investasi besar.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div class="card fade-in">
+                <div class="card-body">
+                    <h2 class="section-title">
+                        <i class="fas fa-star"></i>
+                        Fitur Utama
+                    </h2>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-map-marked-alt"></i>
+                            <div>
+                                <strong>Menentukan Lokasi Pelanggan</strong>
+                                <span>Pelanggan dapat memilih lokasi mereka langsung dari peta atau memasukkan koordinat untuk menentukan tempat pengantaran.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-route"></i>
+                            <div>
+                                <strong>Perhitungan Jarak</strong>
+                                <span>Sistem secara otomatis menghitung jarak antara restoran/toko dan lokasi pelanggan menggunakan teknologi GPS yang akurat dengan rute jalan yang sebenarnya.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-calculator"></i>
+                            <div>
+                                <strong>Perhitungan Ongkir</strong>
+                                <span>Berdasarkan jarak yang dihitung, sistem menghitung ongkos kirim secara otomatis yang harus dibayar oleh pelanggan.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fab fa-whatsapp"></i>
+                            <div>
+                                <strong>Integrasi WhatsApp</strong>
+                                <span>Setelah pemesanan, pelanggan dapat langsung mengirimkan informasi pesanan mereka ke restoran atau toko melalui WhatsApp untuk konfirmasi lebih lanjut.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-map"></i>
+                            <div>
+                                <strong>Peta Interaktif</strong>
+                                <span>Pelanggan dapat melihat rute pengiriman secara visual di peta interaktif dengan garis rute yang mengikuti jalan sebenarnya.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Benefits Section -->
+            <div class="card fade-in">
+                <div class="card-body">
+                    <h2 class="section-title">
+                        <i class="fas fa-trophy"></i>
+                        Manfaat
+                    </h2>
+                    <p class="section-content">
+                        Menggunakan sistem ini memberikan keuntungan bagi pelanggan dan penyedia layanan, antara lain:
+                    </p>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <strong>Mudah dan Cepat</strong>
+                                <span>Pelanggan dapat memilih lokasi dan melakukan pemesanan tanpa kesulitan mencari alamat.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-bullseye"></i>
+                            <div>
+                                <strong>Akurasi Pengiriman</strong>
+                                <span>Sistem ini memastikan perhitungan jarak dan ongkos kirim yang lebih akurat dan efisien, sehingga pengiriman tepat waktu.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-smile"></i>
+                            <div>
+                                <strong>Kenyamanan</strong>
+                                <span>Pelanggan dapat mengirimkan informasi pesanan langsung melalui WhatsApp, meminimalkan kesalahan komunikasi.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-sliders-h"></i>
+                            <div>
+                                <strong>Fleksibilitas</strong>
+                                <span>Pelanggan dapat memilih berbagai metode komunikasi dan cara pengiriman informasi, baik melalui peta atau koordinat manual.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- How It Works Section -->
+            <div class="card fade-in">
+                <div class="card-body">
+                    <h2 class="section-title">
+                        <i class="fas fa-cogs"></i>
+                        Bagaimana Cara Kerjanya?
+                    </h2>
+                    <div class="steps-container">
+                        <div class="step-card">
+                            <div class="step-number">1</div>
+                            <p class="step-text">Sistem menghitung jarak antara lokasi pelanggan dan restoran atau toko menggunakan rute jalan yang sebenarnya.</p>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-number">2</div>
+                            <p class="step-text">Ongkos kirim dihitung berdasarkan jarak dan ditampilkan kepada pelanggan secara otomatis.</p>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-number">3</div>
+                            <p class="step-text">Pelanggan dapat mengirimkan informasi pesanan mereka ke restoran via WhatsApp untuk konfirmasi.</p>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-number">4</div>
+                            <p class="step-text">Rute pengiriman ditampilkan di peta interaktif dengan garis biru yang mengikuti jalan sebenarnya.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="text-center fade-in" style="margin-top: 3rem;">
+                <a href="index.html" class="btn btn-primary btn-lg">
+                    <i class="fas fa-rocket"></i>
+                    Coba Order Delivery Sekarang!
+                </a>
             </div>
         </div>
     </div>
 
-    <div class="mt-3 d-flex justify-content-center">
-        <button class="btn btn-primary btn-fixed" onclick="window.location.href='index.html'">
-            Coba Order Delivery Sekarang!
-        </button>
-    </div>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <h5 style="color: var(--primary-color); margin-bottom: 1rem;">
+                        <i class="fas fa-map-marker-alt"></i> Delivery Order
+                    </h5>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Sistem pemesanan online profesional dengan integrasi peta dan perhitungan ongkir otomatis.
+                    </p>
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <h5 style="color: var(--primary-color); margin-bottom: 1rem;">Tautan Cepat</h5>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 0.5rem;">
+                            <a href="index.html" style="color: var(--text-secondary); text-decoration: none; transition: color 0.3s;">
+                                <i class="fas fa-home" style="margin-right: 0.5rem;"></i> Beranda
+                            </a>
+                        </li>
+                        <li style="margin-bottom: 0.5rem;">
+                            <a href="tentang.html" style="color: var(--text-secondary); text-decoration: none; transition: color 0.3s;">
+                                <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i> Tentang Kami
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 style="color: var(--primary-color); margin-bottom: 1rem;">Kontak</h5>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        <i class="fab fa-whatsapp" style="color: var(--success-color); margin-right: 0.5rem;"></i>
+                        WhatsApp: +62 851-5720-4233
+                    </p>
+                </div>
+            </div>
+            <div class="section-divider" style="margin: 2rem 0 1rem;"></div>
+            <div class="footer-content">
+                <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
+                    &copy; 2024 Delivery Order dengan Peta. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
