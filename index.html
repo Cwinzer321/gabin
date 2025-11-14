@@ -468,7 +468,7 @@
             <!-- Hero Section -->
             <div class="hero-section fade-in">
                 <span class="badge-custom">
-                    <i class="fas fa-star"></i> Sistem Profesional
+                    <i class="fas fa-star"></i> Sistem
                 </span>
                 <h1 class="page-title">Order Delivery dengan Peta</h1>
                 <p class="page-subtitle">
@@ -493,7 +493,7 @@
                         <div class="card-body">
                             <h5 class="card-title">
                                 <i class="fas fa-map-pin"></i>
-                                Masukkan Koordinat
+                                Cek Lokasi
                             </h5>
                             <input type="text" 
                                    class="form-control mb-3 input-box" 
@@ -992,7 +992,7 @@
             // Validasi jarak maksimal: jika lebih dari 50 km, tampilkan error
             if (distance > 50) {
                 // Jika jarak melebihi 50 km, tampilkan error dan sembunyikan fitur pemesanan
-                showToast("Jarak sangat jauh (>50 km). Kami tidak dapat melakukan delivery order ke lokasi ini.", 'error');
+                showToast("Jarak anda sangat jauh (>50 km). Kami tidak dapat melakukan delivery order ke lokasi ini.", 'error');
                 document.getElementById("ongkir").innerText = "-";
                 document.getElementById("whatsappButton").style.display = "none";
                 document.getElementById("noteSection").style.display = "none";
